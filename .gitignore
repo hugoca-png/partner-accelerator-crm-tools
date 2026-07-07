@@ -1,0 +1,24 @@
+.env
+capsule-cache.json
+capsule-cache.js
+node_modules/
+
+# Local runtime/logs
+*.log
+*.out
+*.err
+server-cmd.*
+server.*
+
+# CRM/customer data exports and generated reports
+*.json
+*.xlsx
+*.xls
+*.csv
+outputs/
+prepared-logos/
+
+# Keep source/config JSON files if added later by exception.
+!package.json
+!package-lock.json
+!tsconfig.json

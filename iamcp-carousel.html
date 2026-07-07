@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>IAMCP partners carousel</title>
+    <style>
+      :root {
+        --ink: #111827;
+        --muted: #657083;
+        --line: #dce4ec;
+        --aqua: #028090;
+        --green: #00a676;
+        --coral: #f26b5e;
+        --cream: #fbfaf6;
+        --white: #ffffff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        min-height: 100%;
+        margin: 0;
+      }
+
+      body {
+        overflow: hidden;
+        color: var(--ink);
+        background:
+          linear-gradient(180deg, rgba(2, 128, 144, 0.08), rgba(255, 255, 255, 0) 42%),
+          var(--cream);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+      }
+
+      .stage {
+        min-height: 100vh;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        gap: clamp(16px, 2.5vw, 28px);
+        padding: clamp(18px, 3vw, 34px);
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(22px, 3vw, 42px);
+        line-height: 1;
+        font-weight: 800;
+        letter-spacing: 0;
+      }
+
+      .count {
+        flex: 0 0 auto;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 10px 14px;
+        background: rgba(255, 255, 255, 0.78);
+        color: var(--muted);
+        font-size: clamp(13px, 1.4vw, 16px);
+        font-weight: 700;
+      }
+
+      .carousel {
+        position: relative;
+        min-height: 0;
+        display: grid;
+        align-content: center;
+        gap: clamp(12px, 1.7vw, 22px);
+        padding-block: 6px;
+      }
+
+      .carousel::before,
+      .carousel::after {
+        content: "";
+        position: absolute;
+        z-index: 2;
+        top: 0;
+        bottom: 0;
+        width: min(12vw, 150px);
+        pointer-events: none;
+      }
+
+      .carousel::before {
+        left: 0;
+        background: linear-gradient(90deg, var(--cream), rgba(251, 250, 246, 0));
+      }
+
+      .carousel::after {
+        right: 0;
+        background: linear-gradient(270deg, var(--cream), rgba(251, 250, 246, 0));
+      }
+
+      .row {
+        overflow: hidden;
+        width: 100%;
+      }
+
+      .track {
+        display: flex;
+        gap: clamp(12px, 1.7vw, 20px);
+        width: max-content;
+        will-change: transform;
+        animation-duration: var(--duration, 54s);
+        animation-timing-function: linear;
+        animation-iteration-count: infinite;
+      }
+
+      .row:nth-child(odd) .track {
+        animation-name: slide-right;
+      }
+
+      .row:nth-child(even) .track {
+        animation-name: slide-left;
+      }
+
+      .partner-card {
+        width: clamp(210px, 24vw, 310px);
+        min-height: clamp(84px, 11vh, 118px);
+        display: grid;
+        grid-template-columns: clamp(58px, 7vw, 82px) 1fr;
+        align-items: center;
+        gap: 14px;
+        border: 1px solid rgba(17, 24, 39, 0.1);
+        border-radius: 8px;
+        padding: clamp(10px, 1.2vw, 14px);
+        background: rgba(255, 255, 255, 0.88);
+        box-shadow: 0 14px 30px rgba(17, 24, 39, 0.08);
+      }
+
+      .logo {
+        width: clamp(58px, 7vw, 82px);
+        height: clamp(58px, 7vw, 82px);
+        display: grid;
+        place-items: center;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: var(--white);
+        color: var(--aqua);
+        font-size: clamp(18px, 2.5vw, 26px);
+        font-weight: 900;
+        padding: 7px;
+      }
+
+      .logo img {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: contain;
+      }
+
+      .logo-fallback {
+        display: grid;
+        place-items: center;
+        width: 100%;
+        height: 100%;
+      }
+
+      .name {
+        overflow-wrap: anywhere;
+        font-size: clamp(15px, 1.8vw, 22px);
+        line-height: 1.08;
+        font-weight: 800;
+      }
+
+      .location {
+        margin-top: 7px;
+        color: var(--muted);
+        font-size: clamp(12px, 1.3vw, 15px);
+        font-weight: 650;
+      }
+
+      .empty {
+        max-width: 720px;
+        margin: auto;
+        padding: 24px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--white);
+        color: var(--muted);
+        font-size: 18px;
+        text-align: center;
+      }
+
+      @keyframes slide-left {
+        from {
+          transform: translateX(0);
+        }
+        to {
+          transform: translateX(-50%);
+        }
+      }
+
+      @keyframes slide-right {
+        from {
+          transform: translateX(-50%);
+        }
+        to {
+          transform: translateX(0);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        body {
+          overflow: auto;
+        }
+
+        .track {
+          width: auto;
+          flex-wrap: wrap;
+          animation: none;
+        }
+
+        .row {
+          overflow: visible;
+        }
+      }
+
+      @media (max-width: 760px) {
+        body {
+          overflow: auto;
+        }
+
+        .stage {
+          min-height: auto;
+        }
+
+        .header {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .carousel {
+          align-content: start;
+        }
+
+        .partner-card {
+          width: 230px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="stage">
+      <header class="header">
+        <h1>IAMCP partners</h1>
+        <div class="count" id="count">A carregar...</div>
+      </header>
+
+      <section class="carousel" id="carousel" aria-label="Carrossel de parceiros IAMCP"></section>
+    </main>
+
+    <script src="./capsule-cache.js"></script>
+    <script>
+      const ROW_COUNT = 5;
+      const carousel = document.getElementById("carousel");
+      const count = document.getElementById("count");
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function initials(name) {
+        return String(name || "?")
+          .split(/\s+/)
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((part) => part[0])
+          .join("")
+          .toUpperCase();
+      }
+
+      function hasIamcpYes(org) {
+        const tags = [...(org.dataTags || []), ...(org.tags || [])].map((tag) =>
+          String(tag).toLocaleLowerCase("pt-PT")
+        );
+        return tags.includes("iamcp");
+      }
+
+      function sortPartners(partners) {
+        return [...partners].sort((a, b) =>
+          String(a.name || "").localeCompare(String(b.name || ""), "pt-PT", {
+            sensitivity: "base",
+          })
+        );
+      }
+
+      function distribute(partners) {
+        return Array.from({ length: ROW_COUNT }, (_, rowIndex) =>
+          partners.filter((_, index) => index % ROW_COUNT === rowIndex)
+        );
+      }
+
+      function card(org) {
+        const location = [org.city, org.country].filter(Boolean).join(", ");
+        const visual = org.logo
+          ? `<div class="logo"><img src="${escapeHtml(org.logo)}" alt="" data-fallback="${escapeHtml(initials(org.name))}" /></div>`
+          : `<div class="logo"><span class="logo-fallback">${escapeHtml(initials(org.name))}</span></div>`;
+
+        return `
+          <article class="partner-card">
+            ${visual}
+            <div>
+              <div class="name">${escapeHtml(org.name)}</div>
+              ${location ? `<div class="location">${escapeHtml(location)}</div>` : ""}
+            </div>
+          </article>
+        `;
+      }
+
+      function replaceBrokenLogo(image) {
+        const fallback = document.createElement("span");
+        fallback.className = "logo-fallback";
+        fallback.textContent = image.dataset.fallback || "?";
+        image.replaceWith(fallback);
+      }
+
+      function activateLogoFallbacks() {
+        document.querySelectorAll(".logo img").forEach((image) => {
+          image.addEventListener("error", () => replaceBrokenLogo(image), { once: true });
+          if (image.complete && image.naturalWidth === 0) replaceBrokenLogo(image);
+        });
+      }
+
+      function render() {
+        const data = window.CAPSULE_DATA || {};
+        const partners = sortPartners((data.organisations || []).filter(hasIamcpYes));
+
+        count.textContent = `${partners.length} parceiros`;
+
+        if (!partners.length) {
+          carousel.innerHTML = `<div class="empty">Não há parceiros IAMCP no snapshot local.</div>`;
+          return;
+        }
+
+        carousel.innerHTML = distribute(partners)
+          .map((row, index) => {
+            const repeated = [...row, ...row, ...row];
+            const duration = 36 + row.length * 5 + index * 4;
+            return `
+              <div class="row">
+                <div class="track" style="--duration: ${duration}s">
+                  ${repeated.map(card).join("")}
+                </div>
+              </div>
+            `;
+          })
+          .join("");
+        activateLogoFallbacks();
+      }
+
+      render();
+    </script>
+  </body>
+</html>

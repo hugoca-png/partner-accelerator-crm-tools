@@ -1,0 +1,2138 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Partner Accelerator partners</title>
+    <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="%23ffffff"/><path d="M12 14 30 32 12 50" fill="none" stroke="%23028090" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><path d="M28 14 46 32 28 50" fill="none" stroke="%231E2761" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 56h36" fill="none" stroke="%23D4AF37" stroke-width="5" stroke-linecap="round"/></svg>' />
+    <style>
+      :root {
+        color-scheme: light;
+        --navy: #1e2761;
+        --teal: #028090;
+        --gold: #d4af37;
+        --ink: #111827;
+        --muted: #6b7280;
+        --line: #dfe5ee;
+        --paper: #f5f7fb;
+        --panel: #ffffff;
+        --accent: var(--teal);
+        --accent-ink: #ffffff;
+        --warn: #7a5600;
+        --warn-bg: #fff6dc;
+        --ok: #138a3d;
+        --ok-bg: #e9f8ef;
+        --danger: #b91c1c;
+        --danger-bg: #fee2e2;
+        --navy-soft: #eef0fb;
+        --teal-soft: #e7f6f7;
+        --gold-soft: #fbf4dc;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        border-bottom: 4px solid var(--gold);
+        background: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(12px);
+      }
+
+      .bar {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 18px;
+        align-items: center;
+        width: min(1280px, calc(100vw - 32px));
+        margin: 0 auto;
+        padding: 16px 0;
+      }
+
+      .header-timestamp {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: #ffffff;
+        color: var(--muted);
+        padding: 7px 11px;
+        font-size: 12px;
+        font-weight: 750;
+        white-space: nowrap;
+      }
+
+      .header-side {
+        align-self: start;
+        justify-self: end;
+        display: grid;
+        gap: 8px;
+        justify-items: end;
+      }
+
+      .server-health {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .server-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: #ffffff;
+        color: var(--muted);
+        padding: 7px 11px;
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .server-status::before {
+        content: "";
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--muted);
+        box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.12);
+      }
+
+      .server-status.running {
+        border-color: #bfe8cd;
+        background: var(--ok-bg);
+        color: var(--ok);
+      }
+
+      .server-status.running::before {
+        background: var(--ok);
+        box-shadow: 0 0 0 3px rgba(19, 138, 61, 0.15);
+      }
+
+      .server-status.down {
+        border-color: #fecaca;
+        background: var(--danger-bg);
+        color: var(--danger);
+      }
+
+      .server-status.down::before {
+        background: var(--danger);
+        box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.15);
+      }
+
+      .start-server-button {
+        min-height: 31px;
+        border-color: #fecaca;
+        background: #ffffff;
+        color: var(--danger);
+        font-size: 12px;
+      }
+
+      .start-server-button[hidden] {
+        display: none;
+      }
+
+      .brand {
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        gap: 22px;
+        align-items: center;
+      }
+
+      .brand-logo {
+        width: 220px;
+        height: auto;
+      }
+
+      .home-link {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 8px;
+      }
+
+      .home-link:focus-visible {
+        outline: 3px solid var(--gold);
+        outline-offset: 4px;
+      }
+
+      h1 {
+        margin: 0;
+        color: var(--navy);
+        font-size: 30px;
+        font-weight: 720;
+        letter-spacing: 0;
+      }
+
+      .stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 8px;
+        color: var(--navy);
+        font-size: 14px;
+      }
+
+      .stat {
+        min-width: 128px;
+        border-radius: 8px;
+        background: var(--navy-soft);
+        padding: 6px 9px;
+      }
+
+      .header-note {
+        grid-column: 1 / -1;
+        grid-row: 1;
+        display: none;
+        margin: 0 0 -4px;
+        border-left: 4px solid var(--gold);
+        border-radius: 6px;
+        background: var(--gold-soft);
+        color: #6f5208;
+        padding: 8px 10px;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .header-note.visible {
+        display: block;
+      }
+
+      button {
+        min-height: 36px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 0 12px;
+        background: #ffffff;
+        color: var(--navy);
+        cursor: pointer;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
+
+      .view-toggle {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 3px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #ffffff;
+        padding: 3px;
+      }
+
+      .view-toggle button {
+        min-height: 30px;
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+        box-shadow: none;
+      }
+
+      .view-toggle button.active {
+        background: var(--navy-soft);
+        color: var(--navy);
+      }
+
+      .export-button {
+        background: #ffffff;
+        color: var(--teal);
+      }
+
+      .validation-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
+
+      .actions button,
+      .validation-actions button {
+        min-height: 30px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 750;
+      }
+
+      .validation-actions button.active {
+        border-color: var(--teal);
+        background: var(--teal-soft);
+        color: var(--teal);
+      }
+
+      .progress-panel {
+        display: none;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #ffffff;
+        padding: 9px;
+      }
+
+      #validateIncremental,
+      #validateRisky,
+      #validateFull,
+      #cleanupEmails,
+      #validationProgress {
+        display: none !important;
+      }
+
+      .progress-panel.visible {
+        display: grid;
+        gap: 7px;
+      }
+
+      .progress-text {
+        color: var(--navy);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .progress-bar {
+        overflow: hidden;
+        height: 8px;
+        border-radius: 999px;
+        background: var(--navy-soft);
+      }
+
+      .progress-fill {
+        width: 0%;
+        height: 100%;
+        border-radius: inherit;
+        background: var(--teal);
+        transition: width 180ms ease;
+      }
+
+      button:disabled {
+        cursor: wait;
+        opacity: 0.7;
+      }
+
+      .shell {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 18px;
+        width: min(1280px, calc(100vw - 32px));
+        margin: 0 auto;
+      }
+
+      .controls {
+        position: sticky;
+        top: 112px;
+        align-self: start;
+        max-height: calc(100vh - 116px);
+        overflow-y: auto;
+        padding: 12px 4px 72px 0;
+        scrollbar-width: thin;
+      }
+
+      .control-stack {
+        display: grid;
+        gap: 12px;
+      }
+
+      .az {
+        position: sticky;
+        top: 112px;
+        z-index: 7;
+        display: flex;
+        gap: 4px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        width: 100%;
+        margin-bottom: 12px;
+        padding: 8px 0;
+        background: var(--paper);
+        scrollbar-width: thin;
+      }
+
+      .az a {
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
+        width: 34px;
+        height: 30px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #ffffff;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+        text-decoration: none;
+      }
+
+      .az a:hover,
+      .az a.active {
+        background: #dff0ed;
+        color: var(--accent);
+      }
+
+      main {
+        padding: 18px 0 48px;
+      }
+
+      .filters {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        align-items: start;
+      }
+
+      fieldset {
+        margin: 0;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 12px;
+        box-shadow: 0 8px 20px rgba(30, 39, 97, 0.05);
+      }
+
+      legend {
+        padding: 0 6px;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .chips {
+        display: grid;
+        gap: 7px;
+      }
+
+      .chip-group-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        border: 0;
+        background: transparent;
+        padding: 4px 0;
+        margin-top: 4px;
+        color: var(--navy);
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .chip-group-title::after {
+        content: "−";
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .chip-group-title.collapsed::after {
+        content: "+";
+      }
+
+      .chip-group {
+        display: grid;
+        gap: 7px;
+      }
+
+      .chip-group[hidden] {
+        display: none;
+      }
+
+      label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 30px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 0 10px;
+        background: #fbfcfd;
+        color: #2f3b43;
+        font-size: 13px;
+        width: 100%;
+      }
+
+      input[type="checkbox"] {
+        accent-color: var(--accent);
+      }
+
+      .toolbar {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        align-items: center;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .search {
+        width: 100%;
+        min-height: 40px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 0 12px;
+        font: inherit;
+        color: var(--ink);
+        background: var(--panel);
+      }
+
+      .orgs {
+        display: grid;
+        gap: 12px;
+      }
+
+      .print-pages {
+        display: grid;
+        gap: 18px;
+      }
+
+      .print-page {
+        width: 100%;
+        min-height: 680px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #ffffff;
+        padding: 18px;
+        box-shadow: 0 14px 32px rgba(30, 39, 97, 0.08);
+        page-break-after: always;
+        break-after: page;
+      }
+
+      .print-page:last-child {
+        page-break-after: auto;
+        break-after: auto;
+      }
+
+      .print-page-title {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 14px;
+        color: var(--navy);
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .logo-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        grid-template-rows: repeat(4, 1fr);
+        gap: 12px;
+      }
+
+      .logo-tile {
+        display: grid;
+        grid-template-rows: 76px auto;
+        gap: 8px;
+        align-items: center;
+        justify-items: center;
+        min-height: 132px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px;
+        background: #ffffff;
+      }
+
+      .logo-tile img,
+      .logo-tile .fallback-logo {
+        width: 76px;
+        height: 76px;
+        border-radius: 8px;
+        object-fit: contain;
+      }
+
+      .logo-tile-name {
+        color: var(--navy);
+        font-size: 13px;
+        font-weight: 800;
+        line-height: 1.2;
+        text-align: center;
+      }
+
+      .logo-tile-location {
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.2;
+        margin-top: 3px;
+        text-align: center;
+      }
+
+      .org {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        overflow: hidden;
+        box-shadow: 0 14px 32px rgba(30, 39, 97, 0.08);
+      }
+
+      .org-head {
+        display: grid;
+        grid-template-columns: 72px 1fr;
+        gap: 18px;
+        align-items: center;
+        padding: 18px;
+        border-bottom: 1px solid var(--line);
+        background: linear-gradient(90deg, #ffffff 0%, #f4fbfc 100%);
+      }
+
+      .logo {
+        width: 72px;
+        height: 72px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        object-fit: cover;
+        background: #edf2f5;
+      }
+
+      .fallback-logo {
+        display: grid;
+        place-items: center;
+        color: var(--muted);
+        font-weight: 800;
+      }
+
+      h2 {
+        margin: 0;
+        color: var(--navy);
+        font-size: 21px;
+        line-height: 1.25;
+        letter-spacing: 0;
+      }
+
+      .org-title {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .city {
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .org-url {
+        margin-top: 4px;
+        font-size: 14px;
+      }
+
+      .org-email {
+        margin-top: 4px;
+        font-size: 14px;
+      }
+
+      .tagline {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .pill {
+        border-radius: 999px;
+        background: var(--teal-soft);
+        color: var(--teal);
+        padding: 4px 8px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .pill.data {
+        background: var(--gold-soft);
+        color: #7a5600;
+      }
+
+      .pill.error {
+        background: #fee2e2;
+        color: #b91c1c;
+      }
+
+      .pill.email-risk {
+        background: #fee2e2;
+        color: #b91c1c;
+      }
+
+      .pill.email-ok {
+        background: #e9f8ef;
+        color: #12743b;
+      }
+
+      .pill.email-warning {
+        background: #fff6dc;
+        color: #7a5600;
+      }
+
+      .name-line {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .warning {
+        margin-top: 8px;
+        border-radius: 6px;
+        background: #fee2e2;
+        color: #b91c1c;
+        padding: 7px 9px;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .contact-warning {
+        display: inline-flex;
+        margin-top: 6px;
+        border-radius: 6px;
+        background: #fee2e2;
+        color: #b91c1c;
+        padding: 4px 7px;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .people {
+        display: grid;
+        margin-left: 70px;
+        border-left: 4px solid var(--teal);
+        background: #f9fbfd;
+      }
+
+      .compact .people {
+        display: none;
+      }
+
+      .compact .org-head {
+        border-bottom: 0;
+      }
+
+      .person {
+        display: grid;
+        grid-template-columns: 44px 1.2fr 1fr 0.8fr;
+        gap: 12px;
+        padding: 14px 18px 14px 20px;
+        border-top: 1px solid #edf1f4;
+        align-items: start;
+      }
+
+      .person:hover {
+        background: #ffffff;
+      }
+
+      .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 1px solid var(--line);
+        object-fit: cover;
+        background: #edf2f5;
+      }
+
+      .fallback-avatar {
+        display: grid;
+        place-items: center;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .person:first-child {
+        border-top: 0;
+      }
+
+      .name {
+        color: var(--navy);
+        font-weight: 720;
+      }
+
+      .meta {
+        margin-top: 3px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      a {
+        color: var(--teal);
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      .empty {
+        padding: 16px 14px;
+        color: var(--muted);
+      }
+
+      @media (max-width: 760px) {
+        .shell {
+          grid-template-columns: 1fr;
+          width: min(100vw - 24px, 1280px);
+        }
+
+        .az {
+          position: sticky;
+          top: 368px;
+          z-index: 6;
+          display: flex;
+          overflow-x: auto;
+          overflow-y: hidden;
+          width: auto;
+          max-height: none;
+          gap: 4px;
+          padding: 8px 0;
+          background: var(--paper);
+        }
+
+        .controls {
+          top: 96px;
+          z-index: 8;
+          max-height: calc(100vh - 112px);
+          overflow-y: auto;
+          padding: 10px;
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          background: rgba(245, 247, 251, 0.96);
+          backdrop-filter: blur(10px);
+        }
+
+        .az a {
+          flex: 0 0 auto;
+          width: 30px;
+          height: 30px;
+          background: #ffffff;
+          border: 1px solid var(--line);
+        }
+
+        .bar,
+        .brand,
+        .filters,
+        .toolbar,
+        .person {
+          grid-template-columns: 1fr;
+        }
+
+        .header-side {
+          justify-self: stretch;
+          justify-items: stretch;
+        }
+
+        .server-health {
+          justify-content: stretch;
+        }
+
+        .server-status {
+          justify-content: center;
+        }
+
+        .brand-logo {
+          width: 190px;
+        }
+
+        .toolbar {
+          gap: 8px;
+        }
+
+        .people {
+          margin-left: 14px;
+        }
+
+        .org-head {
+          grid-template-columns: 52px 1fr;
+          gap: 12px;
+          padding: 14px;
+        }
+
+        .logo {
+          width: 52px;
+          height: 52px;
+        }
+
+        h1 {
+          font-size: 24px;
+        }
+
+        h2 {
+          font-size: 18px;
+        }
+
+        button {
+          width: 100%;
+        }
+
+        .actions {
+          justify-content: stretch;
+        }
+      }
+
+      @media print {
+        @page {
+          size: A4 landscape;
+          margin: 10mm;
+        }
+
+        header,
+        .controls,
+        .az {
+          display: none !important;
+        }
+
+        body {
+          background: #ffffff;
+        }
+
+        .shell {
+          display: block;
+          width: auto;
+          margin: 0;
+        }
+
+        main {
+          padding: 0;
+        }
+
+        .orgs,
+        .print-pages {
+          display: block;
+        }
+
+        .print-page {
+          width: auto;
+          min-height: 0;
+          height: 180mm;
+          border: 0;
+          border-radius: 0;
+          padding: 0;
+          box-shadow: none;
+        }
+
+        .logo-grid {
+          height: 164mm;
+          gap: 7mm;
+        }
+
+        .logo-tile {
+          min-height: 0;
+          border: 1px solid #dfe5ee;
+          page-break-inside: avoid;
+          break-inside: avoid;
+        }
+      }
+    </style>
+    <script src="./capsule-cache.js"></script>
+  </head>
+  <body id="top">
+    <header>
+      <div class="bar">
+        <div class="header-note" id="headerNote"></div>
+        <div class="brand">
+          <a class="home-link" href="#top" aria-label="Voltar ao topo">
+            <svg class="brand-logo" viewBox="0 0 270 72" role="img" aria-label="Partner Accelerator">
+              <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 14 L34 34 L14 54" stroke="#028090" stroke-width="8"></path>
+                <path d="M36 14 L56 34 L36 54" stroke="#1E2761" stroke-width="8"></path>
+                <path d="M14 62 L56 62" stroke="#D4AF37" stroke-width="6"></path>
+              </g>
+              <g font-family="Segoe UI, Helvetica, Arial, sans-serif" fill="#1E2761">
+                <text x="82" y="31" font-size="24" font-weight="700" letter-spacing="1.2">PARTNER</text>
+                <text x="82" y="55" font-size="23" font-weight="300" letter-spacing="2.1">ACCELERATOR</text>
+              </g>
+            </svg>
+          </a>
+          <div>
+            <h1>Partner Accelerator partners</h1>
+            <div class="stats" id="stats"></div>
+          </div>
+        </div>
+        <div class="header-side">
+          <div class="header-timestamp" id="headerTimestamp"></div>
+          <div class="server-health" aria-live="polite">
+            <span class="server-status" id="serverStatus">Servidor local: a verificar</span>
+            <button class="start-server-button" id="startLocalServer" type="button" hidden>Iniciar servidor</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="shell">
+      <aside class="controls" aria-label="Opções">
+        <div class="control-stack">
+          <section class="filters" aria-label="Menu">
+            <fieldset>
+              <legend>Dados</legend>
+              <div class="actions">
+                <button id="refresh" type="button">Atualizar</button>
+                <button id="exportExcel" class="export-button" type="button">Exportar Excel</button>
+                <button id="prepareMissingLogos" class="export-button" type="button">Preparar logos em falta</button>
+                <button id="uploadMissingLogos" class="export-button" type="button">Adicionar logos ao CRM</button>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Qualidade</legend>
+              <div class="validation-actions" aria-label="Qualidade dos dados">
+                <button id="normalizePhones" type="button">Corrigir telefones PT</button>
+                <button id="correctNameAccents" type="button">Corrigir acentuação</button>
+                <button id="filterUnlinkedPeople" type="button">Pessoas sem empresa</button>
+                <button id="filterOrgsWithoutPeople" type="button">Empresas sem pessoas</button>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Pesquisar</legend>
+              <div class="toolbar">
+                <input class="search" id="companySearch" type="search" placeholder="Pesquisar empresas ou cidade" />
+                <input class="search" id="personSearch" type="search" placeholder="Pesquisar pessoas, email ou telemóvel" />
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Visualização</legend>
+              <div class="view-toggle" aria-label="Modo de visualização">
+                <button id="companiesOnly" class="active" type="button">Empresas</button>
+                <button id="companiesPeople" type="button">Empresas + pessoas</button>
+                <button id="logosOnly" type="button">Logotipos A4</button>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Regiões</legend>
+              <div class="chips" id="regionFilters"></div>
+            </fieldset>
+            <fieldset>
+              <legend>Tags</legend>
+              <div class="chips" id="tagFilters"></div>
+            </fieldset>
+            <fieldset>
+              <legend>Data-tags</legend>
+              <div class="chips" id="dataTagFilters"></div>
+            </fieldset>
+          </section>
+        </div>
+      </aside>
+      <main>
+        <nav class="az" id="az" aria-label="Índice A-Z"></nav>
+        <section class="orgs" id="orgs"></section>
+      </main>
+    </div>
+
+    <script>
+      let dataset = null;
+
+      const el = {
+        stats: document.getElementById("stats"),
+        headerNote: document.getElementById("headerNote"),
+        headerTimestamp: document.getElementById("headerTimestamp"),
+        serverStatus: document.getElementById("serverStatus"),
+        startLocalServer: document.getElementById("startLocalServer"),
+        homeLink: document.querySelector(".home-link"),
+        refresh: document.getElementById("refresh"),
+        exportExcel: document.getElementById("exportExcel"),
+        prepareMissingLogos: document.getElementById("prepareMissingLogos"),
+        uploadMissingLogos: document.getElementById("uploadMissingLogos"),
+        validateIncremental: document.getElementById("validateIncremental"),
+        validateRisky: document.getElementById("validateRisky"),
+        validateFull: document.getElementById("validateFull"),
+        cleanupEmails: document.getElementById("cleanupEmails"),
+        normalizePhones: document.getElementById("normalizePhones"),
+        correctNameAccents: document.getElementById("correctNameAccents"),
+        filterUnlinkedPeople: document.getElementById("filterUnlinkedPeople"),
+        filterOrgsWithoutPeople: document.getElementById("filterOrgsWithoutPeople"),
+        validationProgress: document.getElementById("validationProgress"),
+        validationProgressText: document.getElementById("validationProgressText"),
+        validationProgressFill: document.getElementById("validationProgressFill"),
+        regionFilters: document.getElementById("regionFilters"),
+        tagFilters: document.getElementById("tagFilters"),
+        dataTagFilters: document.getElementById("dataTagFilters"),
+        orgs: document.getElementById("orgs"),
+        az: document.getElementById("az"),
+        status: document.getElementById("status") || { textContent: "" },
+        companySearch: document.getElementById("companySearch"),
+        personSearch: document.getElementById("personSearch"),
+        companiesOnly: document.getElementById("companiesOnly"),
+        companiesPeople: document.getElementById("companiesPeople"),
+        logosOnly: document.getElementById("logosOnly"),
+      };
+
+      ["validateIncremental", "validateRisky", "validateFull", "cleanupEmails", "validationProgress"].forEach((id) => {
+        document.getElementById(id)?.remove();
+      });
+
+      let viewMode = "companies";
+      let qualityFilter = "";
+      const collapsedRegionGroups = new Set();
+
+      function text(value) {
+        return String(value || "");
+      }
+
+      function escapeHtml(value) {
+        return text(value).replace(/[&<>"']/g, (char) => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#039;",
+        })[char]);
+      }
+
+      function excelCell(value) {
+        return escapeHtml(value).replace(/\r?\n/g, " ");
+      }
+
+      function selected(container) {
+        return [...container.querySelectorAll("input:checked")].map((item) => item.value);
+      }
+
+      function matchesSelected(values, chosen) {
+        if (!chosen.length) return true;
+        return chosen.every((item) => values.includes(item));
+      }
+
+      function emailTagClass(tag) {
+        if (tag === "Email Undeliverable") return "email-risk";
+        if (tag === "Email Deliverable" || tag === "Email Risky" || tag === "Email Catch-All") return "email-ok";
+        return "";
+      }
+
+      function visibleTag(tag) {
+        return !["Email Deliverable", "Email Risky", "Email Catch-All"].includes(tag);
+      }
+
+      function renderTag(tag, extraClass = "") {
+        const classes = ["pill", extraClass, emailTagClass(tag)].filter(Boolean).join(" ");
+        return `<span class="${classes}">${escapeHtml(tag)}</span>`;
+      }
+
+      function renderQualityLabel(text) {
+        return renderTag(text, "error");
+      }
+
+      function realLogo(value) {
+        return value && !/public-assets\/images\/organisation\.svg/i.test(value);
+      }
+
+      function normalizeRegionText(value) {
+        return text(value)
+          .toLocaleLowerCase("pt-PT")
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^\p{L}\p{N}]+/gu, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      const portugalRegions = [
+        { name: "Norte", cities: ["amarante", "barcelos", "braga", "braganca", "ermesinde", "esposende", "famalicao", "felgueiras", "gondomar", "guimaraes", "maia", "matosinhos", "pacos de ferreira", "porto", "povoa de varzim", "santa maria da feira", "senhora da hora", "santo tirso", "sao joao da madeira", "sao mamede de infesta", "trofa", "valongo", "viana do castelo", "vila do conde", "vila nova de famalicao", "vila nova de gaia", "vila real", "viseu norte"] },
+        { name: "Centro", cities: ["agueda", "anreade", "aveiro", "castelo branco", "coimbra", "covilha", "figueira da foz", "fundao", "guarda", "ilhavo", "leiria", "marinha grande", "mealhada", "oliveira de azemeis", "ovar", "pombal", "seia", "vagos", "viseu"] },
+        { name: "Lisboa e Vale do Tejo", cities: ["alcobaca", "alenquer", "almada", "almeirim", "alverca", "amadora", "arruda dos vinhos", "azambuja", "barreiro", "benavente", "bombarral", "cadaval", "caldas da rainha", "caparica", "carnaxide", "cartaxo", "cascais", "chamusca", "constancia", "coruche", "entroncamento", "golega", "lisbon", "lisboa", "lousa", "loures", "lourinha", "mafra", "moita", "montijo", "nazare", "obidos", "odivelas", "oeiras", "palmela", "peniche", "pinhal novo", "rio maior", "salvaterra de magos", "santarem", "seixal", "sesimbra", "setubal", "sintra", "sobral de monte agraco", "torres novas", "torres vedras", "vila franca de xira", "vila nova da barquinha"] },
+        { name: "Alentejo", cities: ["evora", "beja", "portalegre", "sines", "elvas", "estremoz", "montemor o novo", "grandola"] },
+        { name: "Algarve", cities: ["faro", "portimao", "lagos", "albufeira", "loule", "tavira", "olhao"] },
+        { name: "Açores", cities: ["ponta delgada", "angra do heroismo", "horta", "acores"] },
+        { name: "Madeira", cities: ["funchal", "madeira"] },
+      ];
+
+      function regionForOrg(org) {
+        const cityWithAccents = text(org.city).toLocaleLowerCase("pt-PT").normalize("NFC").trim();
+        const country = normalizeRegionText(org.country);
+        const city = normalizeRegionText(org.city);
+        const orgIdentity = normalizeRegionText([org.name, org.url, ...(org.domains || [])].join(" "));
+        if (orgIdentity.includes("bconcepts") || orgIdentity.includes("bconcepts pt")) return "Lisboa e Vale do Tejo";
+        if (orgIdentity.includes("comudel")) return "Centro";
+        if (cityWithAccents === "lousã") return "Centro";
+        if (!country && !city) return "Sem país";
+        const portugalAliases = ["portugal", "pt", "portuguese republic"];
+        if (country && !portugalAliases.includes(country)) return org.country || "Outro país";
+        if (!country && city === "lisbon") return "Lisboa e Vale do Tejo";
+        for (const region of portugalRegions) {
+          if (region.cities.some((item) => city === item || city.includes(item))) return region.name;
+        }
+        return "Portugal sem região";
+      }
+
+      function companySearchable(org) {
+        return [
+          org.name,
+          org.city,
+          org.country,
+          org.url,
+          ...org.tags,
+          ...org.dataTags,
+        ].join(" ").toLocaleLowerCase("pt-PT");
+      }
+
+      function personSearchable(person) {
+        return [
+          person.name,
+          person.selectedEmail,
+          ...person.emails,
+          ...person.phones,
+          ...person.jobTitles,
+        ].join(" ").toLocaleLowerCase("pt-PT");
+      }
+
+      function filteredOrgs(options = {}) {
+        const includeRegion = options.includeRegion !== false;
+        const includeTags = options.includeTags !== false;
+        const includeDataTags = options.includeDataTags !== false;
+        const includeQuality = options.includeQuality !== false;
+        if (!dataset) return [];
+        const tags = includeTags ? selected(el.tagFilters) : [];
+        const dataTags = includeDataTags ? selected(el.dataTagFilters) : [];
+        const regions = includeRegion ? selected(el.regionFilters) : [];
+        const companyQuery = el.companySearch.value.trim().toLocaleLowerCase("pt-PT");
+        const personQuery = el.personSearch.value.trim().toLocaleLowerCase("pt-PT");
+        const orgsWithoutPeople = new Set((dataset.dataQuality?.organisationsWithoutContacts || []).map((item) => String(item.id)));
+        return dataset.organisations
+          .filter((org) =>
+            matchesSelected(org.filterTags || org.tags, tags) &&
+            matchesSelected(org.filterDataTags || org.dataTags, dataTags) &&
+            matchesSelected([regionForOrg(org)], regions) &&
+            (!includeQuality || qualityFilter !== "orgsWithoutPeople" || orgsWithoutPeople.has(String(org.id)) || !org.contacts.length) &&
+            (!companyQuery || companySearchable(org).includes(companyQuery))
+          )
+          .map((org) => ({
+            ...org,
+            contacts: personQuery
+              ? org.contacts.filter((person) => personSearchable(person).includes(personQuery))
+              : org.contacts,
+          }))
+          .filter((org) => !personQuery || org.contacts.length);
+      }
+
+      function filteredUnlinkedPeople() {
+        const quality = dataset?.dataQuality || {};
+        const companyQuery = el.companySearch.value.trim().toLocaleLowerCase("pt-PT");
+        const personQuery = el.personSearch.value.trim().toLocaleLowerCase("pt-PT");
+        return (quality.unlinkedPeople || []).filter((person) => {
+          const searchable = [
+            person.name,
+            ...(person.emails || []),
+            ...(person.phones || []),
+          ].join(" ").toLocaleLowerCase("pt-PT");
+          return (!companyQuery || searchable.includes(companyQuery)) &&
+            (!personQuery || searchable.includes(personQuery));
+        });
+      }
+
+      function renderStats(visible) {
+        const peopleVisible = visible.reduce((sum, org) => sum + org.contacts.length, 0);
+        const duplicatedVisible = visible.reduce((sum, org) => sum + org.contacts.filter((person) => person.duplicate).length, 0);
+        const emailRiskVisible = visible.reduce((sum, org) => sum + org.contacts.filter((person) => (person.tags || []).includes("Email Undeliverable")).length, 0);
+        const quality = dataset.dataQuality || {};
+        const emailValidation = dataset.emailValidation || {};
+        const stats = [
+          `<span class="stat"><strong>${visible.length}</strong> / ${dataset.organisationCount} organizações</span>`,
+          `<span class="stat"><strong>${peopleVisible}</strong> / ${dataset.personCount} pessoas</span>`,
+          `<span class="stat"><strong>${dataset.emailAddressCounts?.work || 0}</strong> emails Work</span>`,
+          `<span class="stat"><strong>${dataset.emailAddressCounts?.home || 0}</strong> emails Home</span>`,
+        ];
+        if (dataset.duplicateContactsMerged) stats.push(`<span class="stat">${dataset.duplicateContactsMerged} contactos duplicados agregados</span>`);
+        if (duplicatedVisible) stats.push(`<span class="stat">${duplicatedVisible} contactos sinalizados</span>`);
+        if (dataset.possibleDuplicateOrganisationCount) stats.push(`<span class="stat">${dataset.possibleDuplicateOrganisationCount} organizações sinalizadas</span>`);
+        if (quality.organisationsWithoutContacts?.length) stats.push(`<span class="stat">${quality.organisationsWithoutContacts.length} empresas sem contactos</span>`);
+        if (quality.unlinkedPeople?.length) stats.push(`<span class="stat">${quality.unlinkedPeople.length} contactos sem empresa</span>`);
+        if (emailRiskVisible) stats.push(`<span class="stat">${emailRiskVisible} emails inválidos</span>`);
+        if (emailValidation.checked) stats.push(`<span class="stat">Última validação: ${emailValidation.checked} emails</span>`);
+        el.stats.innerHTML = stats.join("");
+      }
+
+      function renderFilter(container, values, counts = new Map()) {
+        if (!values.length) {
+          container.innerHTML = `<span class="meta">Sem valores.</span>`;
+          return;
+        }
+        container.innerHTML = values.map((value) => `
+          <label>
+            <input type="checkbox" value="${escapeHtml(value)}" />
+            <span>${escapeHtml(value)}</span>
+            <span>${counts.get(value) || 0}</span>
+          </label>
+        `).join("");
+        container.querySelectorAll("input").forEach((input) => input.addEventListener("change", render));
+      }
+
+      function countValues(orgs, getter) {
+        const counts = new Map();
+        for (const org of orgs) {
+          for (const value of getter(org)) {
+            if (!visibleTag(value)) continue;
+            counts.set(value, (counts.get(value) || 0) + 1);
+          }
+        }
+        return counts;
+      }
+
+      function renderRegionFilters(visible) {
+        const selectedRegions = new Set(selected(el.regionFilters));
+        const counts = new Map();
+        for (const org of visible) {
+          const region = regionForOrg(org);
+          counts.set(region, (counts.get(region) || 0) + 1);
+        }
+        const preferred = ["Norte", "Centro", "Lisboa e Vale do Tejo", "Alentejo", "Algarve", "Açores", "Madeira"];
+        const portugal = preferred.filter((region) => counts.has(region));
+        const other = [...counts.keys()].filter((region) => !preferred.includes(region)).sort((a, b) => a.localeCompare(b, "pt-PT"));
+        const total = (items) => items.reduce((sum, region) => sum + (counts.get(region) || 0), 0);
+        const renderRegion = (region) => `
+          <label>
+            <input type="checkbox" value="${escapeHtml(region)}" ${selectedRegions.has(region) ? "checked" : ""} />
+            <span>${escapeHtml(region)} (${counts.get(region)})</span>
+          </label>
+        `;
+        const renderGroup = (id, title, items) => {
+          if (!items.length) return "";
+          const collapsed = collapsedRegionGroups.has(id);
+          return `
+            <button class="chip-group-title ${collapsed ? "collapsed" : ""}" type="button" data-region-group="${escapeHtml(id)}">
+              <span>${escapeHtml(title)}</span>
+              <span>${total(items)}</span>
+            </button>
+            <div class="chip-group" ${collapsed ? "hidden" : ""}>
+              ${items.map(renderRegion).join("")}
+            </div>
+          `;
+        };
+        if (!portugal.length && !other.length) {
+          el.regionFilters.innerHTML = `<span class="meta">Sem regiões.</span>`;
+          return;
+        }
+        el.regionFilters.innerHTML = [
+          renderGroup("portugal", "Portugal", portugal),
+          renderGroup("other", "Outros países", other),
+        ].join("");
+        el.regionFilters.querySelectorAll("[data-region-group]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const group = button.dataset.regionGroup;
+            if (collapsedRegionGroups.has(group)) collapsedRegionGroups.delete(group);
+            else collapsedRegionGroups.add(group);
+            render();
+          });
+        });
+        el.regionFilters.querySelectorAll("input").forEach((input) => input.addEventListener("change", render));
+      }
+
+      function logo(org) {
+        if (realLogo(org.logo)) {
+          return `<img class="logo" src="${escapeHtml(org.logo)}" alt="" loading="lazy" />`;
+        }
+        return `<div class="logo fallback-logo">${escapeHtml(org.name.slice(0, 2).toUpperCase())}</div>`;
+      }
+
+      function avatar(person) {
+        if (person.photo) {
+          return `<img class="avatar" src="${escapeHtml(person.photo)}" alt="" loading="lazy" />`;
+        }
+        return `<div class="avatar fallback-avatar">${escapeHtml(person.name.slice(0, 2).toUpperCase())}</div>`;
+      }
+
+      function renderPerson(person) {
+        const email = person.selectedEmail || person.emails[0] || "";
+        const emails = email
+          ? `<a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a>`
+          : "";
+        const phones = person.phones.length
+          ? person.phones.map((phone) => `<a href="tel:${escapeHtml(phone)}">${escapeHtml(phone)}</a>`).join("<br>")
+          : "";
+        const role = person.jobTitles.length ? `<div class="meta">${escapeHtml(person.jobTitles.join(", "))}</div>` : "";
+        const qualityLabels = [
+          ...(person.duplicate ? ["contactos sinalizados"] : []),
+          ...((person.tags || []).includes("Email Undeliverable") ? ["emails inválidos"] : []),
+        ].map(renderQualityLabel).join("");
+        const tags = [
+          ...(person.tags || []).filter(visibleTag).map((tag) => renderTag(tag)),
+          ...(person.dataTags || []).map((tag) => renderTag(tag, "data")),
+          qualityLabels,
+        ].join("");
+        const tagLine = tags ? `<div class="tagline">${tags}</div>` : "";
+        return `
+          <div class="person">
+            ${avatar(person)}
+            <div>
+              <div class="name-line">
+                <div class="name">${escapeHtml(person.name)}</div>
+                ${tagLine}
+              </div>
+              ${role}
+            </div>
+            <div>${emails}</div>
+            <div>${phones}</div>
+          </div>
+        `;
+      }
+
+      function renderUnlinkedPerson(person) {
+        const email = person.emails?.[0] || "";
+        const phone = person.phones?.[0] || "";
+        const tags = [renderQualityLabel("sem empresa")].join("");
+        return `
+          <article class="person">
+            <div class="avatar fallback-avatar">${escapeHtml((person.name || "?").slice(0, 2).toUpperCase())}</div>
+            <div>
+              <div class="name-line">
+                <div class="name">${escapeHtml(person.name || "(sem nome)")}</div>
+                <div class="tagline">${tags}</div>
+              </div>
+              <div class="meta">ID ${escapeHtml(person.id || "")}</div>
+            </div>
+            <div>${email ? `<a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a>` : ""}</div>
+            <div>${phone ? `<a href="tel:${escapeHtml(phone)}">${escapeHtml(phone)}</a>` : ""}</div>
+          </article>
+        `;
+      }
+
+      function renderUnlinkedPeople(people) {
+        return `
+          <article class="org">
+            <div class="org-head">
+              <div class="logo fallback-logo">PE</div>
+              <div>
+                <div class="org-title">
+                  <h2>Pessoas sem empresa</h2>
+                  ${renderQualityLabel(`${people.length} contacto${people.length === 1 ? "" : "s"}`)}
+                </div>
+              </div>
+            </div>
+            <div class="people">
+              ${people.map(renderUnlinkedPerson).join("")}
+            </div>
+          </article>
+        `;
+      }
+
+      function renderOrg(org) {
+        const tags = org.tags.filter(visibleTag).map((tag) => renderTag(tag)).join("");
+        const dataTags = org.dataTags.map((tag) => renderTag(tag, "data")).join("");
+        const errorTags = (org.qualityFlags || [])
+          .filter((flag) => flag === "duplicado" || flag === "sem contactos")
+          .map((flag) => renderQualityLabel(flag === "duplicado" ? "organizações sinalizadas" : "empresas sem contactos"))
+          .join("");
+        const url = org.url
+          ? `<div class="org-url"><a href="${escapeHtml(org.url)}" target="_blank" rel="noreferrer">${escapeHtml(org.url.replace(/^https?:\/\//, "").replace(/\/$/, ""))}</a></div>`
+          : "";
+        const orgEmail = org.genericEmails?.[0] || org.emails?.[0] || "";
+        const email = orgEmail
+          ? `<div class="org-email"><a href="mailto:${escapeHtml(orgEmail)}">${escapeHtml(orgEmail)}</a></div>`
+          : "";
+        const location = [org.city, org.country].filter(Boolean).join(", ");
+        const warning = org.possibleDuplicateNames.length
+          ? `<div class="warning">duplicado: ${escapeHtml(org.possibleDuplicateNames.join(", "))}</div>`
+          : "";
+        const people = org.contacts.length
+          ? org.contacts.map(renderPerson).join("")
+          : `<div class="empty">Sem pessoas referenciadas nesta organização.</div>`;
+        return `
+          <article class="org" id="org-${escapeHtml(org.id)}" data-letter="${escapeHtml(firstLetter(org.name))}" data-tags="${escapeHtml(org.tags.join("|"))}" data-data-tags="${escapeHtml(org.dataTags.join("|"))}">
+            <div class="org-head">
+              ${logo(org)}
+              <div>
+                <div class="org-title">
+                  <h2>${escapeHtml(org.name)}</h2>
+                  ${(tags || dataTags || errorTags) ? `<div class="tagline">${tags}${dataTags}${errorTags}</div>` : ""}
+                </div>
+                ${location ? `<div class="city">${escapeHtml(location)}</div>` : ""}
+                ${url}
+                ${email}
+                ${warning}
+              </div>
+            </div>
+            <div class="people">${people}</div>
+          </article>
+        `;
+      }
+
+      function renderLogoTile(org) {
+        const image = realLogo(org.logo)
+          ? `<img src="${escapeHtml(org.logo)}" alt="" loading="lazy" />`
+          : `<div class="fallback-logo">${escapeHtml(org.name.slice(0, 2).toUpperCase())}</div>`;
+        const location = [org.city, org.country].filter(Boolean).join(", ");
+        return `
+          <div class="logo-tile">
+            ${image}
+            <div>
+              <div class="logo-tile-name">${escapeHtml(org.name)}</div>
+              ${location ? `<div class="logo-tile-location">${escapeHtml(location)}</div>` : ""}
+            </div>
+          </div>
+        `;
+      }
+
+      function chunk(items, size) {
+        const pages = [];
+        for (let index = 0; index < items.length; index += size) {
+          pages.push(items.slice(index, index + size));
+        }
+        return pages;
+      }
+
+      function renderLogoPages(visible) {
+        const pages = chunk(visible, 20);
+        return `
+          <div class="print-pages">
+            ${pages.map((page, index) => `
+              <section class="print-page">
+                <div class="print-page-title">
+                  <span>Partner Accelerator partners</span>
+                  <span>Página ${index + 1} / ${pages.length}</span>
+                </div>
+                <div class="logo-grid">
+                  ${page.map(renderLogoTile).join("")}
+                </div>
+              </section>
+            `).join("")}
+          </div>
+        `;
+      }
+
+      function firstLetter(value) {
+        const normalized = text(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+        const letter = normalized[0]?.toLocaleUpperCase("pt-PT") || "#";
+        return /[A-Z]/.test(letter) ? letter : "#";
+      }
+
+      function renderAz(visible) {
+        const letters = [...new Set(visible.map((org) => firstLetter(org.name)))];
+        const alphabet = ["#", ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"];
+        el.az.innerHTML = alphabet.map((letter) => {
+          const org = visible.find((item) => firstLetter(item.name) === letter);
+          if (!letters.includes(letter) || !org) {
+            return `<a aria-disabled="true">${letter}</a>`;
+          }
+          return `<a href="#org-${escapeHtml(org.id)}">${letter}</a>`;
+        }).join("");
+        el.az.querySelectorAll("a[href]").forEach((anchor) => {
+          anchor.addEventListener("click", (event) => {
+            event.preventDefault();
+            const target = document.querySelector(anchor.getAttribute("href"));
+            scrollToElement(target);
+          });
+        });
+      }
+
+      function scrollToElement(target) {
+        if (!target) return;
+        const offset = 128;
+        const top = target.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+      }
+
+      function render() {
+        const quality = dataset.dataQuality || {};
+        const showingUnlinkedPeople = qualityFilter === "unlinkedPeople";
+        const unlinkedPeople = filteredUnlinkedPeople();
+        el.companiesOnly.classList.toggle("active", viewMode === "companies" && !showingUnlinkedPeople);
+        el.companiesPeople.classList.toggle("active", viewMode === "people" || showingUnlinkedPeople);
+        el.logosOnly.classList.toggle("active", viewMode === "logos" && !showingUnlinkedPeople);
+        el.filterUnlinkedPeople.textContent = `Pessoas sem empresa (${quality.unlinkedPeople?.length || 0})`;
+        el.filterOrgsWithoutPeople.textContent = `Empresas sem pessoas (${quality.organisationsWithoutContacts?.length || 0})`;
+        el.filterUnlinkedPeople.classList.toggle("active", showingUnlinkedPeople);
+        el.filterOrgsWithoutPeople.classList.toggle("active", qualityFilter === "orgsWithoutPeople");
+        renderRegionFilters(filteredOrgs({ includeRegion: false, includeQuality: false }));
+        const selectedTags = new Set(selected(el.tagFilters));
+        const selectedDataTags = new Set(selected(el.dataTagFilters));
+        const tagBase = filteredOrgs({ includeTags: false, includeQuality: false });
+        const dataTagBase = filteredOrgs({ includeDataTags: false, includeQuality: false });
+        renderFilter(el.tagFilters, dataset.allTags.filter(visibleTag), countValues(tagBase, (org) => org.filterTags || org.tags));
+        renderFilter(el.dataTagFilters, dataset.allDataTags, countValues(dataTagBase, (org) => org.filterDataTags || org.dataTags));
+        el.tagFilters.querySelectorAll("input").forEach((input) => { input.checked = selectedTags.has(input.value); });
+        el.dataTagFilters.querySelectorAll("input").forEach((input) => { input.checked = selectedDataTags.has(input.value); });
+        const visible = filteredOrgs();
+        if (showingUnlinkedPeople) {
+          el.stats.innerHTML = [
+            `<span class="stat"><strong>${unlinkedPeople.length}</strong> / ${quality.unlinkedPeople?.length || 0} pessoas sem empresa</span>`,
+            `<span class="stat"><strong>${dataset.organisationCount}</strong> organizações</span>`,
+            `<span class="stat"><strong>${dataset.personCount}</strong> pessoas</span>`,
+          ].join("");
+        } else {
+          renderStats(visible);
+        }
+        renderAz(showingUnlinkedPeople ? [] : visible);
+        updateIncrementalValidationCount();
+        el.headerTimestamp.textContent = dataset.refreshedAt
+          ? `Atualizado: ${new Date(dataset.refreshedAt).toLocaleString("pt-PT")}`
+          : "";
+        const showPeople = viewMode === "people";
+        const logoMode = viewMode === "logos";
+        el.az.hidden = logoMode || showingUnlinkedPeople;
+        el.orgs.classList.toggle("compact", !showPeople && !logoMode && !showingUnlinkedPeople);
+        el.orgs.classList.toggle("logos-mode", logoMode);
+        el.personSearch.disabled = !showPeople && !showingUnlinkedPeople;
+        if (showingUnlinkedPeople) {
+          el.personSearch.placeholder = "Pesquisar pessoas, email ou telemóvel";
+          el.orgs.innerHTML = unlinkedPeople.length
+            ? renderUnlinkedPeople(unlinkedPeople)
+            : `<div class="empty">Nenhuma pessoa sem empresa corresponde aos filtros.</div>`;
+          return;
+        }
+        el.personSearch.placeholder = showPeople ? "Pesquisar pessoas, email ou telemóvel" : "Ativa Empresas + pessoas para pesquisar contactos";
+        el.orgs.innerHTML = visible.length
+          ? (logoMode ? renderLogoPages(visible) : visible.map(renderOrg).join(""))
+          : `<div class="empty">Nenhuma organização corresponde aos filtros.</div>`;
+      }
+
+      function setHeaderNote(message = "") {
+        el.headerNote.textContent = message;
+        el.headerNote.classList.toggle("visible", Boolean(message));
+      }
+
+      function setView(nextMode) {
+        viewMode = nextMode;
+        if (qualityFilter === "unlinkedPeople") qualityFilter = "";
+        el.companiesOnly.classList.toggle("active", viewMode === "companies");
+        el.companiesPeople.classList.toggle("active", viewMode === "people");
+        el.logosOnly.classList.toggle("active", viewMode === "logos");
+        if (viewMode !== "people") el.personSearch.value = "";
+        render();
+      }
+
+      function toggleQualityFilter(nextFilter) {
+        qualityFilter = qualityFilter === nextFilter ? "" : nextFilter;
+        if (qualityFilter === "unlinkedPeople") {
+          viewMode = "people";
+        }
+        render();
+      }
+
+      function clearAllSelectors() {
+        el.companySearch.value = "";
+        el.personSearch.value = "";
+        el.tagFilters.querySelectorAll("input:checked").forEach((input) => { input.checked = false; });
+        el.dataTagFilters.querySelectorAll("input:checked").forEach((input) => { input.checked = false; });
+        el.regionFilters.querySelectorAll("input:checked").forEach((input) => { input.checked = false; });
+        qualityFilter = "";
+        collapsedRegionGroups.clear();
+        setView("companies");
+        requestAnimationFrame(() => scrollToElement(el.orgs));
+      }
+
+      function localApi(path) {
+        return `http://localhost:8787${path}`;
+      }
+
+      const localServerStartUrl = "file:///C:/Users/hugoc/Documents/Codex/2026-05-29/acede-minha-lista-de-empresas-no/start-capsule-export.cmd";
+
+      function setServerHealth(isRunning, detail = "") {
+        el.serverStatus.classList.toggle("running", Boolean(isRunning));
+        el.serverStatus.classList.toggle("down", !isRunning);
+        el.serverStatus.textContent = isRunning
+          ? `Servidor local ativo${detail ? `: ${detail}` : ""}`
+          : "Servidor local parado";
+        el.startLocalServer.hidden = Boolean(isRunning);
+      }
+
+      async function checkLocalServer() {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 4000);
+        try {
+          const response = await fetch(localApi("/api/health"), {
+            cache: "no-store",
+            mode: "cors",
+            signal: controller.signal,
+          });
+          if (response.ok) {
+            const body = await response.json().catch(() => ({}));
+            setServerHealth(true, body.port ? `porta ${body.port}` : "");
+          } else {
+            setServerHealth(true, "a responder");
+          }
+          return true;
+        } catch {
+          setServerHealth(false);
+          return false;
+        } finally {
+          clearTimeout(timer);
+        }
+      }
+
+      function startLocalServer() {
+        const popup = window.open(localServerStartUrl, "_blank", "noopener");
+        setHeaderNote(`A abrir o atalho do servidor local. Se o browser bloquear, executa este ficheiro: ${localServerStartUrl.replace("file:///", "").replaceAll("/", "\\")}`);
+        setTimeout(checkLocalServer, 2500);
+        setTimeout(checkLocalServer, 7000);
+        if (!popup) {
+          window.location.href = localServerStartUrl;
+        }
+      }
+
+      function loadSnapshotScript() {
+        return new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src = `./capsule-cache.js?v=${Date.now()}`;
+          script.onload = () => resolve(window.CAPSULE_DATA);
+          script.onerror = () => reject(new Error("Não foi possível carregar o snapshot local."));
+          document.head.append(script);
+        });
+      }
+
+      async function fetchJson(path, timeoutMs = 45000) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+          const response = await fetch(localApi(path), {
+            cache: "no-store",
+            mode: "cors",
+            signal: controller.signal,
+          });
+          const body = await response.json();
+          if (!response.ok || body.error) throw new Error(body.error || "Erro ao carregar dados.");
+          return body;
+        } catch (error) {
+          if (reportWindow && !reportWindow.closed) reportWindow.close();
+          if (reportWindow && !reportWindow.closed) reportWindow.close();
+          if (error.name === "AbortError") {
+            throw new Error("O refresh demorou demasiado. A listagem atual foi mantida.");
+          }
+          throw error;
+        } finally {
+          clearTimeout(timer);
+        }
+      }
+
+      function exportVisibleToExcel() {
+        if (!dataset) return;
+        const visible = filteredOrgs();
+        const rows = [];
+        for (const org of visible) {
+          if (!org.contacts.length) {
+            rows.push({
+              org,
+              person: null,
+            });
+          }
+          for (const person of org.contacts) {
+            rows.push({ org, person });
+          }
+        }
+
+        const headers = [
+          "Empresa",
+          "URL",
+          "Cidade",
+          "País",
+          "Pessoa",
+          "Cargo",
+          "Email",
+          "Telemóvel",
+          "Contacto duplicado",
+          "Tags",
+          "Data-tags",
+        ];
+
+        const htmlRows = rows.map(({ org, person }) => {
+          const locationCountry = org.country || "";
+          const values = [
+            org.name,
+            org.url,
+            org.city,
+            locationCountry,
+            person?.name || "",
+            person?.jobTitles?.join(", ") || "",
+            person?.selectedEmail || person?.emails?.[0] || "",
+            person?.phones?.join(", ") || "",
+            person?.duplicate ? `Sim (${person.ids.length} registos)` : "",
+            org.tags.join(", "),
+            org.dataTags.join(", "),
+          ];
+          return `<tr>${values.map((value) => `<td>${excelCell(value)}</td>`).join("")}</tr>`;
+        }).join("");
+
+        const filters = [
+          ...selected(el.regionFilters).map((value) => `Região: ${value}`),
+          ...selected(el.tagFilters).map((value) => `Tag: ${value}`),
+          ...selected(el.dataTagFilters).map((value) => `Data-tag: ${value}`),
+          el.companySearch.value.trim() ? `Empresa: ${el.companySearch.value.trim()}` : "",
+          el.personSearch.value.trim() ? `Pessoa: ${el.personSearch.value.trim()}` : "",
+        ].filter(Boolean).join(" | ") || "Sem filtros";
+
+        const workbook = `
+          <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+            <head>
+              <meta charset="utf-8" />
+              <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Partners</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
+              <style>
+                body { font-family: Segoe UI, Arial, sans-serif; }
+                table { border-collapse: collapse; }
+                th { background: #1E2761; color: #FFFFFF; font-weight: 700; }
+                td, th { border: 1px solid #D9E1E7; padding: 6px 8px; mso-number-format: "\\@"; }
+                .meta { color: #6B7280; }
+              </style>
+            </head>
+            <body>
+              <h1>Partner Accelerator partners</h1>
+              <p class="meta">Exportado: ${excelCell(new Date().toLocaleString("pt-PT"))}</p>
+              <p class="meta">Filtros: ${excelCell(filters)}</p>
+              <p class="meta">Organizações visíveis: ${visible.length} | Linhas: ${rows.length}</p>
+              <table>
+                <thead><tr>${headers.map((header) => `<th>${excelCell(header)}</th>`).join("")}</tr></thead>
+                <tbody>${htmlRows}</tbody>
+              </table>
+            </body>
+          </html>
+        `;
+
+        const blob = new Blob([workbook], { type: "application/vnd.ms-excel;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+        anchor.href = url;
+        anchor.download = `partner-accelerator-partners-${stamp}.xls`;
+        document.body.append(anchor);
+        anchor.click();
+        anchor.remove();
+        URL.revokeObjectURL(url);
+        setHeaderNote(`Exportadas ${rows.length} linhas para Excel.`);
+      }
+
+      function setLoading(isLoading, label = "Atualizar") {
+        el.refresh.disabled = isLoading;
+        el.refresh.textContent = label;
+        el.exportExcel.disabled = isLoading || !dataset;
+        el.prepareMissingLogos.disabled = isLoading;
+        el.uploadMissingLogos.disabled = isLoading;
+        if (el.validateIncremental) el.validateIncremental.disabled = isLoading;
+        if (el.validateRisky) el.validateRisky.disabled = isLoading;
+        if (el.validateFull) el.validateFull.disabled = isLoading;
+        if (el.cleanupEmails) el.cleanupEmails.disabled = isLoading;
+        el.normalizePhones.disabled = isLoading;
+      }
+
+      function setBouncerCreditsLabel(credits = null) {
+        if (!el.cleanupEmails) return;
+        el.cleanupEmails.textContent = Number.isFinite(Number(credits))
+          ? `Email cleaning (${Number(credits)})`
+          : "Email cleaning";
+      }
+
+      function updateIncrementalValidationCount() {
+        if (!el.validateIncremental) return;
+        if (!dataset) {
+          el.validateIncremental.textContent = "Validar novos emails";
+          return;
+        }
+        const validationTags = new Set(["Email Deliverable", "Email Risky", "Email Undeliverable"]);
+        const pendingEmails = new Set();
+        for (const org of dataset.organisations || []) {
+          for (const contact of org.contacts || []) {
+            const tags = [...(contact.tags || []), ...(contact.dataTags || [])];
+            if (tags.some((tag) => validationTags.has(tag))) continue;
+            for (const email of contact.emails || []) {
+              const normalized = String(email || "").trim().toLocaleLowerCase("pt-PT");
+              if (normalized.includes("@")) pendingEmails.add(normalized);
+            }
+          }
+        }
+        el.validateIncremental.textContent = `Validar novos emails (${pendingEmails.size})`;
+      }
+
+      async function refreshBouncerCredits() {
+        try {
+          const body = await fetchJson("/api/bouncer-credits", 15000);
+          setBouncerCreditsLabel(body.credits);
+        } catch {
+          setBouncerCreditsLabel(null);
+        }
+      }
+
+      function validationLabel(mode) {
+        return ({
+          incremental: "Validação incremental",
+          risky: "Re-validação de risco",
+          full: "Validação completa",
+        })[mode] || "Validação";
+      }
+
+      function validationSummary(body) {
+        const info = body.emailValidation || {};
+        const counts = info.counts || {};
+        return [
+          `${validationLabel(info.mode)} concluída`,
+          `${info.checked || 0} emails verificados`,
+          counts.deliverable || counts.risky ? `${(counts.deliverable || 0) + (counts.risky || 0)} ok` : "",
+          counts.undeliverable ? `${counts.undeliverable} inválidos` : "",
+          info.outputFile ? `output: ${info.outputFile}` : "",
+        ].filter(Boolean).join(" | ");
+      }
+
+      function updateValidationProgress(progress = null) {
+        if (!el.validationProgress) return;
+        const visible = Boolean(progress && (progress.active || progress.phase === "Erro" || progress.phase === "Concluído"));
+        el.validationProgress.classList.toggle("visible", visible);
+        if (!visible) {
+          el.validationProgressText.textContent = "";
+          el.validationProgressFill.style.width = "0%";
+          return;
+        }
+        const total = Number(progress.total || 0);
+        const processed = Number(progress.processed || 0);
+        const percent = total ? Math.max(0, Math.min(100, Math.round((processed / total) * 100))) : 8;
+        const counter = total ? ` ${processed}/${total}` : "";
+        el.validationProgressText.textContent = `${progress.phase || "Validação"}${counter} · ${progress.message || ""}`;
+        el.validationProgressFill.style.width = `${percent}%`;
+      }
+
+      async function pollValidationProgress(stopWhenDone = false) {
+        try {
+          const progress = await fetchJson("/api/email-validation-progress", 10000);
+          updateValidationProgress(progress);
+          if (stopWhenDone && !progress.active) return false;
+        } catch {
+          return true;
+        }
+        return true;
+      }
+
+      async function validateEmails(mode) {
+        if (mode === "full" && !confirm("A validação completa consome créditos Bouncer para todos os emails do CRM. Continuar?")) return;
+        setLoading(true, "A validar...");
+        updateValidationProgress({
+          active: true,
+          phase: "Arranque",
+          processed: 0,
+          total: 0,
+          message: "A iniciar validação",
+        });
+        const progressTimer = setInterval(() => {
+          pollValidationProgress();
+        }, 1000);
+        try {
+          setHeaderNote("");
+          const body = await fetchJson(`/api/email-validation?mode=${encodeURIComponent(mode)}`, mode === "full" ? 600000 : 120000);
+          dataset = body;
+          render();
+          setHeaderNote(`${validationSummary(body)}. Critério: ${body.emailValidation?.criteria || ""}`);
+          el.status.textContent = "";
+        } catch (error) {
+          el.status.textContent = "";
+          setHeaderNote(`Validação não concluída: ${error.message || "condições técnicas indisponíveis"}. A listagem atual foi mantida.`);
+        } finally {
+          clearInterval(progressTimer);
+          await pollValidationProgress(true);
+          await refreshBouncerCredits();
+          setLoading(false);
+        }
+      }
+
+      function cleanupSummary(body) {
+        const info = body.emailCleanup || {};
+        return [
+          `Limpeza concluída`,
+          `${info.plannedEmails || 0} emails removidos`,
+          `${info.updatedProfiles || 0} perfis atualizados`,
+          info.errors ? `${info.errors} erros` : "",
+          info.outputFile ? `output: ${info.outputFile}` : "",
+        ].filter(Boolean).join(" | ");
+      }
+
+      async function cleanupEmails() {
+        if (!confirm("Remover do CRM emails de entidades empregadoras antigas e emails pessoais marcados como baixa qualidade pelo Bouncer?")) return;
+        setLoading(true, "A limpar...");
+        try {
+          setHeaderNote("");
+          const body = await fetchJson("/api/email-cleanup", 180000);
+          dataset = body;
+          render();
+          setHeaderNote(`${cleanupSummary(body)}. Critério: ${(body.emailCleanup?.criteria || []).join(" ")}`);
+          el.status.textContent = "";
+        } catch (error) {
+          el.status.textContent = "";
+          setHeaderNote(`Limpeza não concluída: ${error.message || "condições técnicas indisponíveis"}. A listagem atual foi mantida.`);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      function phoneNormalizationSummary(body) {
+        const info = body.phoneNormalization || {};
+        return [
+          "Telefones corrigidos",
+          `${info.numbersFormatted || 0} números formatados`,
+          `${info.duplicatesRemoved || 0} duplicados removidos`,
+          `${info.partiesWithChanges || 0} perfis alterados`,
+          info.errors?.length ? `${info.errors.length} erros` : "",
+          info.outputFile ? `output: ${info.outputFile}` : "",
+        ].filter(Boolean).join(" | ");
+      }
+
+      async function normalizePhones() {
+        if (!confirm("Corrigir no CRM os telefones portugueses começados por 2 ou 9 e remover duplicados inequívocos do mesmo número?")) return;
+        setLoading(true, "A corrigir...");
+        try {
+          setHeaderNote("");
+          const body = await fetchJson("/api/phone-normalization", 180000);
+          dataset = body;
+          render();
+          const summary = phoneNormalizationSummary(body);
+          setHeaderNote(`${summary}. Critério: números portugueses começados por 2 ou 9, com ou sem prefixo 351, ficam no formato +351 XXX XXX XXX.`);
+          el.status.textContent = "";
+        } catch (error) {
+          el.status.textContent = "";
+          setHeaderNote(`Correção de telefones não concluída: ${error.message || "condições técnicas indisponíveis"}. A listagem atual foi mantida.`);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      async function correctNameAccents() {
+        if (!confirm("Corrigir no CRM a acentuação evidente dos nomes? Nuno Braz e Victor Marques serão sempre mantidos sem alterações.")) return;
+        setLoading(true, "A corrigir nomes...");
+        try {
+          setHeaderNote("");
+          const body = await fetchJson("/api/name-accents", 240000);
+          dataset = body;
+          render();
+          const info = body.nameAccentCorrection || {};
+          setHeaderNote([
+            "Acentuação corrigida",
+            `${info.updated || 0} contactos alterados`,
+            info.errors ? `${info.errors} erros` : "",
+            "Nuno Braz e Victor Marques excluídos",
+          ].filter(Boolean).join(" | "));
+          el.status.textContent = "";
+        } catch (error) {
+          el.status.textContent = "";
+          setHeaderNote(`Correção de nomes não concluída: ${error.message || "condições técnicas indisponíveis"}. A listagem atual foi mantida.`);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      async function prepareMissingLogos() {
+        const reportWindow = window.open("", "_blank");
+        if (reportWindow) {
+          reportWindow.document.write("<!doctype html><title>A preparar logos</title><body style=\"font-family:Segoe UI,Arial,sans-serif;margin:24px;color:#1e2761\"><h1>A preparar logos...</h1><p>A janela abre automaticamente quando o relatorio estiver pronto.</p></body>");
+          reportWindow.document.close();
+        }
+        setLoading(true, "A preparar...");
+        try {
+          setHeaderNote("");
+          const body = await fetchJson("/api/missing-logos", 150000);
+          const info = body.missingLogos || {};
+          const prepared = Number(info.prepared || 0);
+          const pending = Number(info.pending || 0);
+          const reportUrl = info.reportUrl || "/prepared-logos/index.html";
+          const summary = `Logos preparados: ${prepared}; pendentes: ${pending}. Relatório: ${reportUrl}`;
+          setHeaderNote(summary);
+          const reportHref = new URL(reportUrl, "http://localhost:8787").href;
+          if (reportWindow && !reportWindow.closed) {
+            reportWindow.location.href = reportHref;
+          } else {
+            window.location.href = reportHref;
+          }
+        } catch (error) {
+          const message = `Preparação de logos não concluída: ${error.message || "servidor local ou rede indisponível"}.`;
+          el.status.textContent = "";
+          setHeaderNote(`${message} A listagem atual foi mantida.`);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      function logoUploadSummary(body) {
+        const info = body.logoUpload || {};
+        return [
+          "Logos adicionados ao CRM",
+          `${info.updated || 0} atualizados`,
+          `${info.skipped || 0} ignorados`,
+          info.errors ? `${info.errors} erros` : "",
+          info.outputFile ? `output: ${info.outputFile}` : "",
+        ].filter(Boolean).join(" | ");
+      }
+
+      async function uploadMissingLogos() {
+        if (!confirm("Adicionar no CRM os logos preparados no relatório atual? Confirma visualmente o relatório antes de avançar.")) return;
+        setLoading(true, "A adicionar logos...");
+        try {
+          setHeaderNote("");
+          const body = await fetchJson("/api/upload-missing-logos", 240000);
+          dataset = body;
+          render();
+          setHeaderNote(`${logoUploadSummary(body)}.`);
+          el.status.textContent = "";
+        } catch (error) {
+          el.status.textContent = "";
+          setHeaderNote(`Upload de logos não concluído: ${error.message || "servidor local ou CRM indisponível"}. A listagem atual foi mantida.`);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      async function load(refresh = false) {
+        setLoading(true, refresh ? "A atualizar..." : "A carregar...");
+        try {
+          setHeaderNote("");
+          await checkLocalServer();
+          let body;
+          try {
+            body = await fetchJson(refresh ? "/api/refresh" : "/api/data");
+          } catch (serverError) {
+            if (refresh) {
+              body = await loadSnapshotScript();
+              if (!body) throw serverError;
+              setHeaderNote(`Snapshot local carregado: ${new Date(body.refreshedAt).toLocaleString("pt-PT")}.`);
+            } else {
+              throw serverError;
+            }
+          }
+          if (refresh && body.organisations?.length && !("url" in body.organisations[0])) {
+            throw new Error("O servidor local ainda está na versão anterior. Fecha a janela do servidor e volta a abrir o atalho abrir-capsule-export.cmd.");
+          }
+          dataset = body;
+          render();
+          setServerHealth(true, "porta 8787");
+          if (body.refreshDiagnostics?.duplicatePartyCount) {
+            setHeaderNote(`Refresh corrigido: ${body.refreshDiagnostics.duplicatePartyCount} entradas repetidas da API foram ignoradas antes de gerar a lista.`);
+          }
+        } catch (error) {
+          await checkLocalServer();
+          if (!refresh && window.CAPSULE_DATA) {
+            dataset = window.CAPSULE_DATA;
+            render();
+            setHeaderNote(`Snapshot local: ${new Date(dataset.refreshedAt).toLocaleString("pt-PT")}.`);
+            return;
+          }
+          el.status.textContent = "";
+          setHeaderNote(`Refresh não concluído: ${error.message || "condições técnicas indisponíveis"}. A listagem atual foi mantida.`);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      window.refreshPartnerList = () => load(true);
+      el.homeLink.addEventListener("click", (event) => {
+        event.preventDefault();
+        clearAllSelectors();
+      });
+      el.startLocalServer.addEventListener("click", startLocalServer);
+      el.refresh.addEventListener("click", window.refreshPartnerList);
+      el.exportExcel.addEventListener("click", exportVisibleToExcel);
+      el.prepareMissingLogos.addEventListener("click", prepareMissingLogos);
+      el.uploadMissingLogos.addEventListener("click", uploadMissingLogos);
+      el.validateIncremental?.addEventListener("click", () => validateEmails("incremental"));
+      el.validateRisky?.addEventListener("click", () => validateEmails("risky"));
+      el.validateFull?.addEventListener("click", () => validateEmails("full"));
+      el.cleanupEmails?.addEventListener("click", cleanupEmails);
+      el.normalizePhones.addEventListener("click", normalizePhones);
+      el.correctNameAccents.addEventListener("click", correctNameAccents);
+      el.filterUnlinkedPeople.addEventListener("click", () => toggleQualityFilter("unlinkedPeople"));
+      el.filterOrgsWithoutPeople.addEventListener("click", () => toggleQualityFilter("orgsWithoutPeople"));
+      el.companySearch.addEventListener("input", render);
+      el.personSearch.addEventListener("input", render);
+      el.companiesOnly.addEventListener("click", () => setView("companies"));
+      el.companiesPeople.addEventListener("click", () => setView("people"));
+      el.logosOnly.addEventListener("click", () => setView("logos"));
+      checkLocalServer();
+      setInterval(checkLocalServer, 15000);
+      load(false);
+    </script>
+  </body>
+</html>

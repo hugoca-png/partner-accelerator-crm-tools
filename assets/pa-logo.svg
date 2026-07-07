@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 270 72" role="img" aria-labelledby="title">
+  <title id="title">Partner Accelerator</title>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M14 14 L34 34 L14 54" stroke="#028090" stroke-width="8"/>
+    <path d="M36 14 L56 34 L36 54" stroke="#1E2761" stroke-width="8"/>
+    <path d="M14 62 L56 62" stroke="#D4AF37" stroke-width="6"/>
+  </g>
+  <g font-family="Segoe UI, Helvetica, Arial, sans-serif" fill="#1E2761">
+    <text x="82" y="31" font-size="24" font-weight="700" letter-spacing="1.2">PARTNER</text>
+    <text x="82" y="55" font-size="23" font-weight="300" letter-spacing="2.1">ACCELERATOR</text>
+  </g>
+</svg>

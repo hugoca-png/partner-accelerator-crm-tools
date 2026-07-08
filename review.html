@@ -135,6 +135,84 @@
         padding: 12px 0;
       }
 
+      .filters {
+        position: sticky;
+        top: 140px;
+        z-index: 3;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        border-bottom: 1px solid var(--line);
+        background: var(--paper);
+        padding: 0 0 12px;
+      }
+
+      fieldset {
+        margin: 0;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 10px;
+      }
+
+      legend {
+        padding: 0 6px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .chips,
+      .chip-group {
+        display: grid;
+        gap: 7px;
+      }
+
+      .chip-group-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        border: 0;
+        background: transparent;
+        padding: 4px 0;
+        color: var(--navy);
+        font-size: 12px;
+        font-weight: 850;
+        text-transform: uppercase;
+      }
+
+      .chip-group-title::after {
+        content: "-";
+        color: var(--muted);
+      }
+
+      .chip-group-title.collapsed::after {
+        content: "+";
+      }
+
+      .chip-group[hidden] {
+        display: none;
+      }
+
+      .filter-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        min-height: 28px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: #fbfcfd;
+        padding: 0 9px;
+        color: #2f3b43;
+        font-size: 12px;
+        font-weight: 720;
+      }
+
+      .filter-chip input {
+        accent-color: var(--teal);
+      }
+
       input[type="search"] {
         width: 100%;
         min-height: 42px;
@@ -294,6 +372,7 @@
       @media (max-width: 760px) {
         .bar,
         .toolbar,
+        .filters,
         .org-head,
         .person {
           grid-template-columns: 1fr;
@@ -341,6 +420,20 @@
         <input id="search" type="search" placeholder="Filtrar por empresa, descrição, cidade, país, pessoa, email ou telefone" />
         <div class="stats" id="stats"></div>
       </div>
+      <section class="filters" aria-label="Filtros">
+        <fieldset>
+          <legend>Regiões</legend>
+          <div class="chips" id="regionFilters"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Tags</legend>
+          <div class="chips" id="tagFilters"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Data-tags</legend>
+          <div class="chips" id="dataTagFilters"></div>
+        </fieldset>
+      </section>
       <div class="note" id="note"></div>
       <section class="orgs" id="orgs"></section>
     </main>
@@ -355,8 +448,13 @@
         search: document.getElementById("search"),
         stats: document.getElementById("stats"),
         note: document.getElementById("note"),
+        regionFilters: document.getElementById("regionFilters"),
+        tagFilters: document.getElementById("tagFilters"),
+        dataTagFilters: document.getElementById("dataTagFilters"),
         orgs: document.getElementById("orgs"),
       };
+
+      const collapsedRegionGroups = new Set();
 
       function text(value) {
         return String(value || "");
@@ -390,6 +488,130 @@
         const body = await response.json();
         if (!response.ok || body.error) throw new Error(body.error || "Erro ao chamar o servidor local.");
         return body;
+      }
+
+      function normalizeRegionText(value) {
+        return text(value)
+          .toLocaleLowerCase("pt-PT")
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^\p{L}\p{N}]+/gu, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      const portugalRegions = [
+        { name: "Norte", cities: ["amarante", "barcelos", "braga", "braganca", "ermesinde", "esposende", "famalicao", "felgueiras", "gondomar", "guimaraes", "maia", "matosinhos", "pacos de ferreira", "porto", "povoa de varzim", "santa maria da feira", "senhora da hora", "santo tirso", "sao joao da madeira", "sao mamede de infesta", "trofa", "valongo", "viana do castelo", "vila do conde", "vila nova de famalicao", "vila nova de gaia", "vila real", "viseu norte"] },
+        { name: "Centro", cities: ["agueda", "anreade", "aveiro", "castelo branco", "coimbra", "covilha", "figueira da foz", "fundao", "guarda", "ilhavo", "leiria", "marinha grande", "mealhada", "oliveira de azemeis", "ovar", "pombal", "seia", "vagos", "viseu"] },
+        { name: "Lisboa e Vale do Tejo", cities: ["alcobaca", "alenquer", "almada", "almeirim", "alverca", "amadora", "arruda dos vinhos", "azambuja", "barreiro", "benavente", "bombarral", "cadaval", "caldas da rainha", "caparica", "carnaxide", "cartaxo", "cascais", "chamusca", "constancia", "coruche", "entroncamento", "golega", "lisbon", "lisboa", "lousa", "loures", "lourinha", "mafra", "moita", "montijo", "nazare", "obidos", "odivelas", "oeiras", "palmela", "peniche", "pinhal novo", "rio maior", "salvaterra de magos", "santarem", "seixal", "sesimbra", "setubal", "sintra", "sobral de monte agraco", "torres novas", "torres vedras", "vila franca de xira", "vila nova da barquinha"] },
+        { name: "Alentejo", cities: ["evora", "beja", "portalegre", "sines", "elvas", "estremoz", "montemor o novo", "grandola"] },
+        { name: "Algarve", cities: ["faro", "portimao", "lagos", "albufeira", "loule", "tavira", "olhao"] },
+        { name: "Açores", cities: ["ponta delgada", "angra do heroismo", "horta", "acores"] },
+        { name: "Madeira", cities: ["funchal", "madeira"] },
+      ];
+
+      function regionForOrg(org) {
+        const cityWithAccents = text(org.city).toLocaleLowerCase("pt-PT").normalize("NFC").trim();
+        const country = normalizeRegionText(org.country);
+        const city = normalizeRegionText(org.city);
+        const orgIdentity = normalizeRegionText([org.name, org.url, ...(org.domains || [])].join(" "));
+        if (orgIdentity.includes("bconcepts") || orgIdentity.includes("bconcepts pt")) return "Lisboa e Vale do Tejo";
+        if (orgIdentity.includes("comudel")) return "Centro";
+        if (cityWithAccents === "lousã") return "Centro";
+        if (!country && !city) return "Sem país";
+        const portugalAliases = ["portugal", "pt", "portuguese republic"];
+        if (country && !portugalAliases.includes(country)) return org.country || "Outro país";
+        if (!country && city === "lisbon") return "Lisboa e Vale do Tejo";
+        for (const region of portugalRegions) {
+          if (region.cities.some((item) => city === item || city.includes(item))) return region.name;
+        }
+        return "Portugal sem região";
+      }
+
+      function selected(container) {
+        return [...container.querySelectorAll("input:checked")].map((input) => input.value);
+      }
+
+      function matchesSelected(values, selectedValues) {
+        if (!selectedValues.length) return true;
+        const valueSet = new Set((values || []).filter(Boolean));
+        return selectedValues.some((value) => valueSet.has(value));
+      }
+
+      function visibleTag(value) {
+        return !["Email Deliverable", "Email Risky", "Email Catch-All"].includes(value);
+      }
+
+      function countValues(orgs, getter) {
+        const counts = new Map();
+        for (const org of orgs) {
+          for (const value of getter(org)) {
+            if (!visibleTag(value)) continue;
+            counts.set(value, (counts.get(value) || 0) + 1);
+          }
+        }
+        return counts;
+      }
+
+      function renderFilter(container, values, counts = new Map()) {
+        if (!values.length) {
+          container.innerHTML = `<span class="meta">Sem valores.</span>`;
+          return;
+        }
+        const checked = new Set(selected(container));
+        container.innerHTML = values.map((value) => `
+          <label class="filter-chip">
+            <input type="checkbox" value="${escapeHtml(value)}" ${checked.has(value) ? "checked" : ""} />
+            <span>${escapeHtml(value)}</span>
+            <span>${counts.get(value) || 0}</span>
+          </label>
+        `).join("");
+        container.querySelectorAll("input").forEach((input) => input.addEventListener("change", render));
+      }
+
+      function renderRegionFilters(orgs) {
+        const selectedRegions = new Set(selected(el.regionFilters));
+        const counts = new Map();
+        for (const org of orgs) {
+          const region = regionForOrg(org);
+          counts.set(region, (counts.get(region) || 0) + 1);
+        }
+        const preferred = ["Norte", "Centro", "Lisboa e Vale do Tejo", "Alentejo", "Algarve", "Açores", "Madeira"];
+        const portugal = preferred.filter((region) => counts.has(region));
+        const other = [...counts.keys()].filter((region) => !preferred.includes(region)).sort((a, b) => a.localeCompare(b, "pt-PT"));
+        const total = (items) => items.reduce((sum, region) => sum + (counts.get(region) || 0), 0);
+        const renderRegion = (region) => `
+          <label class="filter-chip">
+            <input type="checkbox" value="${escapeHtml(region)}" ${selectedRegions.has(region) ? "checked" : ""} />
+            <span>${escapeHtml(region)} (${counts.get(region)})</span>
+          </label>
+        `;
+        const renderGroup = (id, title, items) => {
+          if (!items.length) return "";
+          const collapsed = collapsedRegionGroups.has(id);
+          return `
+            <button class="chip-group-title ${collapsed ? "collapsed" : ""}" type="button" data-region-group="${escapeHtml(id)}">
+              <span>${escapeHtml(title)}</span>
+              <span>${total(items)}</span>
+            </button>
+            <div class="chip-group" ${collapsed ? "hidden" : ""}>
+              ${items.map(renderRegion).join("")}
+            </div>
+          `;
+        };
+        el.regionFilters.innerHTML = [
+          renderGroup("portugal", "Portugal", portugal),
+          renderGroup("other", "Outros países", other),
+        ].join("") || `<span class="meta">Sem regiões.</span>`;
+        el.regionFilters.querySelectorAll("[data-region-group]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const group = button.dataset.regionGroup;
+            if (collapsedRegionGroups.has(group)) collapsedRegionGroups.delete(group);
+            else collapsedRegionGroups.add(group);
+            render();
+          });
+        });
+        el.regionFilters.querySelectorAll("input").forEach((input) => input.addEventListener("change", render));
       }
 
       function searchable(org) {
@@ -474,7 +696,22 @@
 
       function render() {
         const query = el.search.value.trim().toLocaleLowerCase("pt-PT");
-        visible = (dataset?.organisations || []).filter((org) => !query || searchable(org).includes(query));
+        const organisations = dataset?.organisations || [];
+        const searchBase = organisations.filter((org) => !query || searchable(org).includes(query));
+        const regionValues = selected(el.regionFilters);
+        const tagValues = selected(el.tagFilters);
+        const dataTagValues = selected(el.dataTagFilters);
+        renderRegionFilters(searchBase);
+        renderFilter(el.tagFilters, (dataset?.allTags || []).filter(visibleTag), countValues(searchBase, (org) => org.filterTags || org.tags || []));
+        renderFilter(el.dataTagFilters, dataset?.allDataTags || [], countValues(searchBase, (org) => org.filterDataTags || org.dataTags || []));
+        el.regionFilters.querySelectorAll("input").forEach((input) => { input.checked = regionValues.includes(input.value); });
+        el.tagFilters.querySelectorAll("input").forEach((input) => { input.checked = tagValues.includes(input.value); });
+        el.dataTagFilters.querySelectorAll("input").forEach((input) => { input.checked = dataTagValues.includes(input.value); });
+        visible = searchBase.filter((org) =>
+          matchesSelected([regionForOrg(org)], regionValues) &&
+          matchesSelected(org.filterTags || org.tags || [], tagValues) &&
+          matchesSelected(org.filterDataTags || org.dataTags || [], dataTagValues)
+        );
         const people = visible.reduce((sum, org) => sum + (org.contacts || []).length, 0);
         el.stats.innerHTML = [
           `<span class="stat">${visible.length} / ${dataset?.organisationCount || 0} empresas</span>`,

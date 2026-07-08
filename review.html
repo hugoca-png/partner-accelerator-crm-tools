@@ -111,19 +111,25 @@
         accent-color: var(--danger);
       }
 
-      .person-delete {
+      .delete-mode {
         display: grid;
-        gap: 6px;
+        gap: 5px;
         justify-items: end;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 750;
       }
 
-      .person-delete .delete-warning {
-        font-size: 11px;
+      .delete-mode label,
+      .person-select {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
       }
 
-      .person-delete button {
-        min-height: 30px;
-        padding: 0 9px;
+      .delete-mode input,
+      .person-select input {
+        accent-color: var(--danger);
       }
 
       button:disabled {
@@ -363,7 +369,7 @@
 
       .person {
         display: grid;
-        grid-template-columns: minmax(160px, 1fr) minmax(220px, 1.2fr) minmax(140px, 0.75fr) minmax(120px, auto);
+        grid-template-columns: 34px minmax(160px, 1fr) minmax(220px, 1.2fr) minmax(140px, 0.75fr);
         gap: 10px;
         align-items: start;
         border-top: 1px solid #edf1f4;
@@ -688,25 +694,20 @@
         return value ? `<span class="pill ${warn ? "warn" : ""}">${escapeHtml(value)}</span>` : "";
       }
 
-      function renderPerson(person) {
+      function renderPerson(person, orgId) {
         const ids = (person.ids || []).map(String).filter(Boolean);
         const key = ids.join("-") || text(person.name);
         return `
           <div class="person" data-person-row="${escapeHtml(key)}">
+            <label class="person-select" title="Selecionar esta pessoa para apagar">
+              <input type="checkbox" data-select-person="${escapeHtml(key)}" data-select-person-org="${escapeHtml(orgId)}" />
+            </label>
             <div>
               <div class="name">${escapeHtml(person.name || "(sem nome)")}</div>
               <div class="meta">${escapeHtml((person.jobTitles || []).join(", "))}</div>
             </div>
             <div>${(person.emails || []).map((email) => `<a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a>`).join("<br>")}</div>
             <div>${(person.phones || []).map((phone) => `<a href="tel:${escapeHtml(phone)}">${escapeHtml(phone)}</a>`).join("<br>")}</div>
-            <div class="person-delete">
-              <div class="delete-warning">Apaga apenas esta pessoa no CRM.</div>
-              <label class="delete-confirm">
-                <input type="checkbox" data-confirm-person-delete="${escapeHtml(key)}" />
-                <span>Confirmo</span>
-              </label>
-              <button class="danger" type="button" data-delete-person="${escapeHtml(key)}" disabled>Apagar</button>
-            </div>
           </div>
         `;
       }
@@ -737,17 +738,27 @@
                 ${tagLine ? `<div class="tags">${tagLine}</div>` : ""}
               </div>
               <div class="delete-box">
-                <div class="delete-warning">Apaga a empresa e as pessoas associadas no CRM.</div>
+                <div class="delete-warning">Apaga no CRM a opção escolhida.</div>
+                <div class="delete-mode">
+                  <label>
+                    <input type="radio" name="delete-mode-${escapeHtml(org.id)}" value="organisation" data-delete-mode="${escapeHtml(org.id)}" checked />
+                    <span>Empresa + pessoas</span>
+                  </label>
+                  <label>
+                    <input type="radio" name="delete-mode-${escapeHtml(org.id)}" value="people" data-delete-mode="${escapeHtml(org.id)}" />
+                    <span>Pessoas selecionadas (<span data-selected-people-count="${escapeHtml(org.id)}">0</span>)</span>
+                  </label>
+                </div>
                 <label class="delete-confirm">
                   <input type="checkbox" data-confirm-delete="${escapeHtml(org.id)}" />
                   <span>Confirmo</span>
                 </label>
-                <button class="danger" type="button" data-delete-org="${escapeHtml(org.id)}" disabled>Apagar</button>
+                <button class="danger" type="button" data-delete-action="${escapeHtml(org.id)}" disabled>Apagar</button>
               </div>
             </div>
             <p class="description ${org.description ? "" : "empty"}">${escapeHtml(org.description || "Sem descrição registada.")}</p>
             <div class="people">
-              ${(org.contacts || []).length ? org.contacts.map(renderPerson).join("") : `<div class="empty-list">Sem pessoas associadas.</div>`}
+              ${(org.contacts || []).length ? org.contacts.map((person) => renderPerson(person, org.id)).join("") : `<div class="empty-list">Sem pessoas associadas.</div>`}
             </div>
           </article>
         `;
@@ -781,21 +792,24 @@
           : `<div class="empty-list">Nenhuma empresa corresponde ao filtro.</div>`;
         el.orgs.querySelectorAll("[data-confirm-delete]").forEach((checkbox) => {
           checkbox.addEventListener("change", () => {
-            const button = document.querySelector(`[data-delete-org="${CSS.escape(String(checkbox.dataset.confirmDelete))}"]`);
-            if (button) button.disabled = !checkbox.checked;
+            updateDeleteAction(checkbox.dataset.confirmDelete);
           });
         });
-        el.orgs.querySelectorAll("[data-delete-org]").forEach((button) => {
-          button.addEventListener("click", () => deleteOrg(button.dataset.deleteOrg));
+        el.orgs.querySelectorAll("[data-delete-mode]").forEach((radio) => {
+          radio.addEventListener("change", () => updateDeleteAction(radio.dataset.deleteMode));
         });
-        el.orgs.querySelectorAll("[data-confirm-person-delete]").forEach((checkbox) => {
+        el.orgs.querySelectorAll("[data-select-person]").forEach((checkbox) => {
           checkbox.addEventListener("change", () => {
-            const button = document.querySelector(`[data-delete-person="${CSS.escape(String(checkbox.dataset.confirmPersonDelete))}"]`);
-            if (button) button.disabled = !checkbox.checked;
+            const orgId = checkbox.dataset.selectPersonOrg;
+            if (checkbox.checked) {
+              const peopleMode = document.querySelector(`[data-delete-mode="${CSS.escape(String(orgId))}"][value="people"]`);
+              if (peopleMode) peopleMode.checked = true;
+            }
+            updateDeleteAction(orgId);
           });
         });
-        el.orgs.querySelectorAll("[data-delete-person]").forEach((button) => {
-          button.addEventListener("click", () => deletePerson(button.dataset.deletePerson));
+        el.orgs.querySelectorAll("[data-delete-action]").forEach((button) => {
+          button.addEventListener("click", () => deleteSelectedAction(button.dataset.deleteAction));
         });
       }
 
@@ -817,6 +831,44 @@
         }
       }
 
+      function selectedPeopleForOrg(orgId) {
+        const selectedKeys = [...document.querySelectorAll(`[data-select-person-org="${CSS.escape(String(orgId))}"]:checked`)]
+          .map((checkbox) => checkbox.dataset.selectPerson);
+        const selectedKeySet = new Set(selectedKeys);
+        const org = (dataset?.organisations || []).find((item) => String(item.id) === String(orgId));
+        const people = [];
+        for (const person of org?.contacts || []) {
+          const ids = (person.ids || []).map(String).filter(Boolean);
+          const key = ids.join("-") || text(person.name);
+          if (selectedKeySet.has(key)) people.push({ person, ids });
+        }
+        return people;
+      }
+
+      function updateDeleteAction(orgId) {
+        const id = String(orgId);
+        const confirm = document.querySelector(`[data-confirm-delete="${CSS.escape(id)}"]`);
+        const mode = document.querySelector(`[data-delete-mode="${CSS.escape(id)}"]:checked`)?.value || "organisation";
+        const selectedPeople = selectedPeopleForOrg(id);
+        const count = document.querySelector(`[data-selected-people-count="${CSS.escape(id)}"]`);
+        const button = document.querySelector(`[data-delete-action="${CSS.escape(id)}"]`);
+        if (count) count.textContent = String(selectedPeople.length);
+        if (!button) return;
+        button.disabled = !confirm?.checked || (mode === "people" && selectedPeople.length === 0);
+        button.textContent = mode === "people"
+          ? `Apagar ${selectedPeople.length || ""} pessoa(s)`.replace("  ", " ")
+          : "Apagar empresa";
+      }
+
+      async function deleteSelectedAction(id) {
+        const mode = document.querySelector(`[data-delete-mode="${CSS.escape(String(id))}"]:checked`)?.value || "organisation";
+        if (mode === "people") {
+          await deleteSelectedPeople(id);
+          return;
+        }
+        await deleteOrg(id);
+      }
+
       async function deleteOrg(id) {
         const org = (dataset?.organisations || []).find((item) => String(item.id) === String(id));
         if (!org) return;
@@ -827,7 +879,7 @@
           return;
         }
         setNote(`A apagar "${org.name}" e ${peopleCount} pessoa(s) associada(s)...`);
-        const button = document.querySelector(`[data-delete-org="${CSS.escape(String(id))}"]`);
+        const button = document.querySelector(`[data-delete-action="${CSS.escape(String(id))}"]`);
         if (button) {
           button.disabled = true;
           button.textContent = "A apagar...";
@@ -850,32 +902,23 @@
         }
       }
 
-      function findPersonByKey(key) {
-        for (const org of dataset?.organisations || []) {
-          for (const person of org.contacts || []) {
-            const ids = (person.ids || []).map(String).filter(Boolean);
-            const personKey = ids.join("-") || text(person.name);
-            if (personKey === key) return { org, person, ids };
-          }
-        }
-        return null;
-      }
-
-      async function deletePerson(key) {
-        const found = findPersonByKey(String(key));
-        if (!found) return;
-        const { org, person, ids } = found;
-        const checkbox = document.querySelector(`[data-confirm-person-delete="${CSS.escape(String(key))}"]`);
+      async function deleteSelectedPeople(orgId) {
+        const org = (dataset?.organisations || []).find((item) => String(item.id) === String(orgId));
+        if (!org) return;
+        const checkbox = document.querySelector(`[data-confirm-delete="${CSS.escape(String(orgId))}"]`);
         if (!checkbox?.checked) {
-          setNote("Marca a checkbox de confirmação antes de apagar a pessoa.");
+          setNote("Marca a checkbox de confirmação antes de apagar.");
           return;
         }
+        const selectedPeople = selectedPeopleForOrg(orgId);
+        const ids = selectedPeople.flatMap((item) => item.ids);
         if (!ids.length) {
-          setNote(`Não foi possível apagar "${person.name || "(sem nome)"}": falta o id da pessoa.`);
+          setNote("Seleciona pelo menos uma pessoa nesta empresa.");
+          updateDeleteAction(orgId);
           return;
         }
-        setNote(`A apagar "${person.name || "(sem nome)"}" de "${org.name}"...`);
-        const button = document.querySelector(`[data-delete-person="${CSS.escape(String(key))}"]`);
+        setNote(`A apagar ${selectedPeople.length} pessoa(s) de "${org.name}"...`);
+        const button = document.querySelector(`[data-delete-action="${CSS.escape(String(orgId))}"]`);
         if (button) {
           button.disabled = true;
           button.textContent = "A apagar...";
@@ -887,14 +930,11 @@
           });
           dataset = body;
           const info = body.reviewPersonDeletion || {};
-          setNote(`Pessoa apagada: ${info.person?.name || person.name}; registos removidos: ${info.deletedPeople?.length || 0}.`);
+          setNote(`Pessoas apagadas de "${info.organisation?.name || org.name}": ${info.deletedPeople?.length || 0} registo(s).`);
           render();
         } catch (error) {
-          setNote(`Não foi possível apagar "${person.name || "(sem nome)"}": ${error.message || "erro desconhecido"}.`);
-          if (button) {
-            button.disabled = false;
-            button.textContent = "Apagar";
-          }
+          setNote(`Não foi possível apagar pessoas de "${org.name}": ${error.message || "erro desconhecido"}.`);
+          updateDeleteAction(orgId);
         }
       }
 

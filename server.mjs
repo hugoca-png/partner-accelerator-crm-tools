@@ -1228,15 +1228,15 @@ function sendError(res, error) {
   sendJson(res, 500, { error: error.message || String(error) });
 }
 
-async function deleteOrganisationWithPeople({ id, confirmName }) {
+async function deleteOrganisationWithPeople({ id, confirmDelete }) {
   const orgId = cleanText(id);
   if (!orgId) throw new Error("Falta o id da empresa.");
 
   const cache = await readCache();
   const org = (cache.organisations || []).find((item) => String(item.id) === orgId);
   if (!org) throw new Error(`Empresa ${orgId} não encontrada no cache local.`);
-  if (cleanText(confirmName) !== org.name) {
-    throw new Error("Nome de confirmação não corresponde à empresa.");
+  if (confirmDelete !== true) {
+    throw new Error("Confirmação obrigatória em falta.");
   }
 
   const token = await getToken();

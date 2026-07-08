@@ -83,6 +83,34 @@
         color: var(--danger);
       }
 
+      .delete-box {
+        display: grid;
+        gap: 8px;
+        min-width: 190px;
+        justify-items: end;
+      }
+
+      .delete-warning {
+        color: var(--danger);
+        font-size: 12px;
+        font-weight: 800;
+        line-height: 1.25;
+        text-align: right;
+      }
+
+      .delete-confirm {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 750;
+      }
+
+      .delete-confirm input {
+        accent-color: var(--danger);
+      }
+
       button:disabled {
         cursor: wait;
         opacity: 0.65;
@@ -283,6 +311,14 @@
         button {
           width: 100%;
         }
+
+        .delete-box {
+          justify-items: stretch;
+        }
+
+        .delete-warning {
+          text-align: left;
+        }
       }
     </style>
   </head>
@@ -419,7 +455,14 @@
                 </div>
                 ${tagLine ? `<div class="tags">${tagLine}</div>` : ""}
               </div>
-              <button class="danger" type="button" data-delete-org="${escapeHtml(org.id)}">Apagar</button>
+              <div class="delete-box">
+                <div class="delete-warning">Apaga a empresa e as pessoas associadas no CRM.</div>
+                <label class="delete-confirm">
+                  <input type="checkbox" data-confirm-delete="${escapeHtml(org.id)}" />
+                  <span>Confirmo</span>
+                </label>
+                <button class="danger" type="button" data-delete-org="${escapeHtml(org.id)}" disabled>Apagar</button>
+              </div>
             </div>
             <p class="description ${org.description ? "" : "empty"}">${escapeHtml(org.description || "Sem descrição registada.")}</p>
             <div class="people">
@@ -440,6 +483,12 @@
         el.orgs.innerHTML = visible.length
           ? visible.map(renderOrg).join("")
           : `<div class="empty-list">Nenhuma empresa corresponde ao filtro.</div>`;
+        el.orgs.querySelectorAll("[data-confirm-delete]").forEach((checkbox) => {
+          checkbox.addEventListener("change", () => {
+            const button = document.querySelector(`[data-delete-org="${CSS.escape(String(checkbox.dataset.confirmDelete))}"]`);
+            if (button) button.disabled = !checkbox.checked;
+          });
+        });
         el.orgs.querySelectorAll("[data-delete-org]").forEach((button) => {
           button.addEventListener("click", () => deleteOrg(button.dataset.deleteOrg));
         });
@@ -467,11 +516,12 @@
         const org = (dataset?.organisations || []).find((item) => String(item.id) === String(id));
         if (!org) return;
         const peopleCount = (org.contacts || []).reduce((sum, person) => sum + (person.ids?.length || 1), 0);
-        const typed = prompt(`Esta ação apaga no CRM a empresa "${org.name}" e ${peopleCount} pessoa(s) associada(s). Para confirmar, escreve exatamente o nome da empresa:`);
-        if (typed !== org.name) {
-          if (typed !== null) setNote("Eliminação cancelada: o nome escrito não corresponde.");
+        const checkbox = document.querySelector(`[data-confirm-delete="${CSS.escape(String(id))}"]`);
+        if (!checkbox?.checked) {
+          setNote("Marca a checkbox de confirmação antes de apagar.");
           return;
         }
+        setNote(`A apagar "${org.name}" e ${peopleCount} pessoa(s) associada(s)...`);
         const button = document.querySelector(`[data-delete-org="${CSS.escape(String(id))}"]`);
         if (button) {
           button.disabled = true;
@@ -480,7 +530,7 @@
         try {
           const body = await fetchJson("/api/review-delete-organisation", {
             method: "POST",
-            body: JSON.stringify({ id, confirmName: typed }),
+            body: JSON.stringify({ id, confirmDelete: true }),
           });
           dataset = body;
           const info = body.reviewDeletion || {};

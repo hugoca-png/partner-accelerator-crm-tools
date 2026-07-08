@@ -315,7 +315,7 @@ async function normalizePhonesInCrm(parties, token) {
 
 const nameAccentReplacements = new Map([
   ["Aragao", "Aragão"], ["Armenio", "Arménio"], ["Vania", "Vânia"],
-  ["Aderito", "Adérito"], ["Americo", "Américo"], ["Andre", "André"], ["Antonio", "António"],
+  ["Abilio", "Abílio"], ["Aderito", "Adérito"], ["Americo", "Américo"], ["Andre", "André"], ["Antonio", "António"],
   ["Araujo", "Araújo"],
   ["Bailao", "Bailão"], ["Bras", "Brás"], ["Calo", "Caló"], ["Catia", "Cátia"],
   ["Charreu", "Charréu"], ["Claudia", "Cláudia"], ["Custodio", "Custódio"], ["Cacador", "Caçador"],

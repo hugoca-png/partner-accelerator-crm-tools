@@ -5,6 +5,7 @@ const token = env.match(/^CAPSULE_TOKEN=(.+)$/m)?.[1]?.trim();
 if (!token) throw new Error("CAPSULE_TOKEN nao encontrado.");
 
 const replacements = new Map([
+  ["Abilio", "Abílio"],
   ["Aragao", "Aragão"],
   ["Armenio", "Arménio"],
   ["Vania", "Vânia"],

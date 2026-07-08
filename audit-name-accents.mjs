@@ -20,6 +20,8 @@ const replacements = new Map([
   ["Charreu", "Charréu"],
   ["Claudia", "Cláudia"],
   ["Custodio", "Custódio"],
+  ["Cacador", "Caçador"],
+  ["Fatima", "Fátima"],
   ["Felix", "Félix"],
   ["Frazao", "Frazão"],
   ["Gloria", "Glória"],

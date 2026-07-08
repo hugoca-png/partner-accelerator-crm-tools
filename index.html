@@ -78,6 +78,22 @@
         justify-items: end;
       }
 
+      .header-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 31px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: #ffffff;
+        color: var(--teal);
+        padding: 0 12px;
+        font-size: 12px;
+        font-weight: 800;
+        text-decoration: none;
+        white-space: nowrap;
+      }
+
       .server-health {
         display: flex;
         flex-wrap: wrap;
@@ -968,6 +984,7 @@
         </div>
         <div class="header-side">
           <div class="header-timestamp" id="headerTimestamp"></div>
+          <a class="header-link" href="/review">Review</a>
           <div class="server-health" aria-live="polite">
             <span class="server-status" id="serverStatus">Servidor local: a verificar</span>
             <button class="start-server-button" id="startLocalServer" type="button" hidden>Iniciar servidor</button>

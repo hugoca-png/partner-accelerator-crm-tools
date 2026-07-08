@@ -1282,6 +1282,60 @@ async function deleteOrganisationWithPeople({ id, confirmDelete }) {
   return data;
 }
 
+async function deleteReviewPerson({ ids, id, confirmDelete }) {
+  const personIds = unique((Array.isArray(ids) ? ids : [id]).map(cleanText).filter(Boolean));
+  if (!personIds.length) throw new Error("Falta o id da pessoa.");
+  if (confirmDelete !== true) {
+    throw new Error("Confirmação obrigatória em falta.");
+  }
+
+  const cache = await readCache();
+  let matched = null;
+  for (const org of cache.organisations || []) {
+    for (const person of org.contacts || []) {
+      const contactIds = (person.ids || []).map(String);
+      if (personIds.some((personId) => contactIds.includes(String(personId)))) {
+        matched = {
+          organisation: { id: org.id, name: org.name },
+          person: { name: person.name || "", ids: contactIds },
+        };
+        break;
+      }
+    }
+    if (matched) break;
+  }
+  if (!matched) throw new Error(`Pessoa ${personIds.join(", ")} não encontrada no cache local.`);
+
+  const token = await getToken();
+  const deletedPeople = [];
+  const errors = [];
+  for (const personId of personIds) {
+    try {
+      await capsuleFetch(`/parties/${personId}`, token, { method: "DELETE" });
+      deletedPeople.push(personId);
+    } catch (error) {
+      errors.push({ type: "person", id: personId, error: error.message || String(error) });
+    }
+  }
+
+  const report = {
+    generatedAt: new Date().toISOString(),
+    organisation: matched.organisation,
+    person: matched.person,
+    requestedPeople: personIds.length,
+    deletedPeople,
+    errors,
+  };
+  await writeFile(join(root, "review-delete-person-report.json"), JSON.stringify(report, null, 2), "utf8");
+
+  const data = errors.length ? await readCache() : await refreshData();
+  data.reviewPersonDeletion = {
+    ...report,
+    outputFile: "review-delete-person-report.json",
+  };
+  return data;
+}
+
 function prepareMissingLogos() {
   const scriptPath = join(root, "prepare-missing-logos.mjs");
   if (!existsSync(scriptPath)) {
@@ -1500,6 +1554,14 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       sendJson(res, 200, await deleteOrganisationWithPeople(await readRequestJson(req)));
+      return;
+    }
+    if (url.pathname === "/api/review-delete-person") {
+      if (req.method !== "POST") {
+        sendJson(res, 405, { error: "Método não permitido." });
+        return;
+      }
+      sendJson(res, 200, await deleteReviewPerson(await readRequestJson(req)));
       return;
     }
     const requested = url.pathname === "/" ? "/index.html" : (url.pathname === "/review" ? "/review.html" : url.pathname);

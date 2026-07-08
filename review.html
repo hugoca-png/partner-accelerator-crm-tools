@@ -111,6 +111,21 @@
         accent-color: var(--danger);
       }
 
+      .person-delete {
+        display: grid;
+        gap: 6px;
+        justify-items: end;
+      }
+
+      .person-delete .delete-warning {
+        font-size: 11px;
+      }
+
+      .person-delete button {
+        min-height: 30px;
+        padding: 0 9px;
+      }
+
       button:disabled {
         cursor: wait;
         opacity: 0.65;
@@ -348,8 +363,9 @@
 
       .person {
         display: grid;
-        grid-template-columns: minmax(160px, 1fr) minmax(220px, 1.2fr) minmax(160px, 0.8fr);
+        grid-template-columns: minmax(160px, 1fr) minmax(220px, 1.2fr) minmax(140px, 0.75fr) minmax(120px, auto);
         gap: 10px;
+        align-items: start;
         border-top: 1px solid #edf1f4;
         padding: 10px 14px;
         font-size: 13px;
@@ -673,14 +689,24 @@
       }
 
       function renderPerson(person) {
+        const ids = (person.ids || []).map(String).filter(Boolean);
+        const key = ids.join("-") || text(person.name);
         return `
-          <div class="person">
+          <div class="person" data-person-row="${escapeHtml(key)}">
             <div>
               <div class="name">${escapeHtml(person.name || "(sem nome)")}</div>
               <div class="meta">${escapeHtml((person.jobTitles || []).join(", "))}</div>
             </div>
             <div>${(person.emails || []).map((email) => `<a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a>`).join("<br>")}</div>
             <div>${(person.phones || []).map((phone) => `<a href="tel:${escapeHtml(phone)}">${escapeHtml(phone)}</a>`).join("<br>")}</div>
+            <div class="person-delete">
+              <div class="delete-warning">Apaga apenas esta pessoa no CRM.</div>
+              <label class="delete-confirm">
+                <input type="checkbox" data-confirm-person-delete="${escapeHtml(key)}" />
+                <span>Confirmo</span>
+              </label>
+              <button class="danger" type="button" data-delete-person="${escapeHtml(key)}" disabled>Apagar</button>
+            </div>
           </div>
         `;
       }
@@ -762,6 +788,15 @@
         el.orgs.querySelectorAll("[data-delete-org]").forEach((button) => {
           button.addEventListener("click", () => deleteOrg(button.dataset.deleteOrg));
         });
+        el.orgs.querySelectorAll("[data-confirm-person-delete]").forEach((checkbox) => {
+          checkbox.addEventListener("change", () => {
+            const button = document.querySelector(`[data-delete-person="${CSS.escape(String(checkbox.dataset.confirmPersonDelete))}"]`);
+            if (button) button.disabled = !checkbox.checked;
+          });
+        });
+        el.orgs.querySelectorAll("[data-delete-person]").forEach((button) => {
+          button.addEventListener("click", () => deletePerson(button.dataset.deletePerson));
+        });
       }
 
       async function load(refresh = false) {
@@ -808,6 +843,54 @@
           render();
         } catch (error) {
           setNote(`Não foi possível apagar "${org.name}": ${error.message || "erro desconhecido"}.`);
+          if (button) {
+            button.disabled = false;
+            button.textContent = "Apagar";
+          }
+        }
+      }
+
+      function findPersonByKey(key) {
+        for (const org of dataset?.organisations || []) {
+          for (const person of org.contacts || []) {
+            const ids = (person.ids || []).map(String).filter(Boolean);
+            const personKey = ids.join("-") || text(person.name);
+            if (personKey === key) return { org, person, ids };
+          }
+        }
+        return null;
+      }
+
+      async function deletePerson(key) {
+        const found = findPersonByKey(String(key));
+        if (!found) return;
+        const { org, person, ids } = found;
+        const checkbox = document.querySelector(`[data-confirm-person-delete="${CSS.escape(String(key))}"]`);
+        if (!checkbox?.checked) {
+          setNote("Marca a checkbox de confirmação antes de apagar a pessoa.");
+          return;
+        }
+        if (!ids.length) {
+          setNote(`Não foi possível apagar "${person.name || "(sem nome)"}": falta o id da pessoa.`);
+          return;
+        }
+        setNote(`A apagar "${person.name || "(sem nome)"}" de "${org.name}"...`);
+        const button = document.querySelector(`[data-delete-person="${CSS.escape(String(key))}"]`);
+        if (button) {
+          button.disabled = true;
+          button.textContent = "A apagar...";
+        }
+        try {
+          const body = await fetchJson("/api/review-delete-person", {
+            method: "POST",
+            body: JSON.stringify({ ids, confirmDelete: true }),
+          });
+          dataset = body;
+          const info = body.reviewPersonDeletion || {};
+          setNote(`Pessoa apagada: ${info.person?.name || person.name}; registos removidos: ${info.deletedPeople?.length || 0}.`);
+          render();
+        } catch (error) {
+          setNote(`Não foi possível apagar "${person.name || "(sem nome)"}": ${error.message || "erro desconhecido"}.`);
           if (button) {
             button.disabled = false;
             button.textContent = "Apagar";

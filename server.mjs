@@ -319,6 +319,7 @@ const nameAccentReplacements = new Map([
   ["Araujo", "Araújo"],
   ["Bailao", "Bailão"], ["Bras", "Brás"], ["Calo", "Caló"], ["Catia", "Cátia"],
   ["Charreu", "Charréu"], ["Claudia", "Cláudia"], ["Custodio", "Custódio"], ["Cacador", "Caçador"],
+  ["Debora", "Débora"],
   ["Estevao", "Estevão"], ["Fatima", "Fátima"], ["Felix", "Félix"],
   ["Frazao", "Frazão"], ["Gloria", "Glória"], ["Goncalo", "Gonçalo"], ["Goncalves", "Gonçalves"],
   ["Graca", "Graça"], ["Helder", "Hélder"],

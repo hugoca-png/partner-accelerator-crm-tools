@@ -122,6 +122,17 @@
         padding: 18px 0 48px;
       }
 
+      .review-layout {
+        display: grid;
+        grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+        gap: 18px;
+        align-items: start;
+      }
+
+      .review-content {
+        min-width: 0;
+      }
+
       .toolbar {
         position: sticky;
         top: 73px;
@@ -137,14 +148,16 @@
 
       .filters {
         position: sticky;
-        top: 140px;
+        top: 92px;
         z-index: 3;
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 12px;
-        border-bottom: 1px solid var(--line);
+        gap: 10px;
+        max-height: calc(100vh - 110px);
+        overflow: auto;
+        border: 1px solid var(--line);
+        border-radius: 8px;
         background: var(--paper);
-        padding: 0 0 12px;
+        padding: 10px;
       }
 
       fieldset {
@@ -199,6 +212,7 @@
         display: inline-flex;
         align-items: center;
         gap: 7px;
+        width: 100%;
         min-height: 28px;
         border: 1px solid var(--line);
         border-radius: 999px;
@@ -211,6 +225,11 @@
 
       .filter-chip input {
         accent-color: var(--teal);
+      }
+
+      .filter-chip span {
+        min-width: 0;
+        overflow-wrap: anywhere;
       }
 
       input[type="search"] {
@@ -372,10 +391,20 @@
       @media (max-width: 760px) {
         .bar,
         .toolbar,
-        .filters,
         .org-head,
         .person {
           grid-template-columns: 1fr;
+        }
+
+        .review-layout {
+          grid-template-columns: minmax(145px, 28vw) minmax(0, 1fr);
+          gap: 10px;
+        }
+
+        .filters {
+          top: 92px;
+          max-height: calc(100vh - 110px);
+          padding: 8px;
         }
 
         .top-actions,
@@ -416,26 +445,30 @@
     </header>
 
     <main>
-      <div class="toolbar">
-        <input id="search" type="search" placeholder="Filtrar por empresa, descrição, cidade, país, pessoa, email ou telefone" />
-        <div class="stats" id="stats"></div>
+      <div class="review-layout">
+        <aside class="filters" aria-label="Filtros">
+          <fieldset>
+            <legend>Regiões</legend>
+            <div class="chips" id="regionFilters"></div>
+          </fieldset>
+          <fieldset>
+            <legend>Tags</legend>
+            <div class="chips" id="tagFilters"></div>
+          </fieldset>
+          <fieldset>
+            <legend>Data-tags</legend>
+            <div class="chips" id="dataTagFilters"></div>
+          </fieldset>
+        </aside>
+        <section class="review-content" aria-label="Empresas">
+          <div class="toolbar">
+            <input id="search" type="search" placeholder="Filtrar por empresa, descrição, cidade, país, pessoa, email ou telefone" />
+            <div class="stats" id="stats"></div>
+          </div>
+          <div class="note" id="note"></div>
+          <section class="orgs" id="orgs"></section>
+        </section>
       </div>
-      <section class="filters" aria-label="Filtros">
-        <fieldset>
-          <legend>Regiões</legend>
-          <div class="chips" id="regionFilters"></div>
-        </fieldset>
-        <fieldset>
-          <legend>Tags</legend>
-          <div class="chips" id="tagFilters"></div>
-        </fieldset>
-        <fieldset>
-          <legend>Data-tags</legend>
-          <div class="chips" id="dataTagFilters"></div>
-        </fieldset>
-      </section>
-      <div class="note" id="note"></div>
-      <section class="orgs" id="orgs"></section>
     </main>
 
     <script>

@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Review partners</title>
+    <style>
+      :root {
+        --navy: #1e2761;
+        --teal: #028090;
+        --gold: #d4af37;
+        --ink: #111827;
+        --muted: #6b7280;
+        --line: #dfe5ee;
+        --paper: #f5f7fb;
+        --panel: #ffffff;
+        --danger: #b91c1c;
+        --danger-bg: #fee2e2;
+        --ok: #12743b;
+        --ok-bg: #e9f8ef;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        border-bottom: 4px solid var(--gold);
+        background: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(12px);
+      }
+
+      .bar {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 16px;
+        align-items: center;
+        width: min(1280px, calc(100vw - 32px));
+        margin: 0 auto;
+        padding: 14px 0;
+      }
+
+      h1 {
+        margin: 0;
+        color: var(--navy);
+        font-size: 26px;
+        letter-spacing: 0;
+      }
+
+      .top-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        justify-content: flex-end;
+      }
+
+      a, button {
+        color: var(--teal);
+        font: inherit;
+        font-weight: 750;
+      }
+
+      button {
+        min-height: 34px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #ffffff;
+        cursor: pointer;
+        padding: 0 11px;
+      }
+
+      button.danger {
+        border-color: #fecaca;
+        background: #ffffff;
+        color: var(--danger);
+      }
+
+      button:disabled {
+        cursor: wait;
+        opacity: 0.65;
+      }
+
+      main {
+        width: min(1280px, calc(100vw - 32px));
+        margin: 0 auto;
+        padding: 18px 0 48px;
+      }
+
+      .toolbar {
+        position: sticky;
+        top: 73px;
+        z-index: 4;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 12px;
+        align-items: center;
+        border-bottom: 1px solid var(--line);
+        background: var(--paper);
+        padding: 12px 0;
+      }
+
+      input[type="search"] {
+        width: 100%;
+        min-height: 42px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #ffffff;
+        padding: 0 12px;
+        color: var(--ink);
+        font: inherit;
+      }
+
+      .stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-end;
+      }
+
+      .stat {
+        border-radius: 8px;
+        background: #eef0fb;
+        color: var(--navy);
+        padding: 7px 9px;
+        font-size: 13px;
+        font-weight: 780;
+        white-space: nowrap;
+      }
+
+      .note {
+        display: none;
+        margin: 12px 0 0;
+        border-left: 4px solid var(--gold);
+        border-radius: 6px;
+        background: #fff6dc;
+        color: #6f5208;
+        padding: 9px 11px;
+        font-size: 13px;
+        font-weight: 750;
+      }
+
+      .note.visible { display: block; }
+
+      .orgs {
+        display: grid;
+        gap: 12px;
+        margin-top: 14px;
+      }
+
+      .org {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        box-shadow: 0 12px 28px rgba(30, 39, 97, 0.07);
+        overflow: hidden;
+      }
+
+      .org-head {
+        display: grid;
+        grid-template-columns: 58px 1fr auto;
+        gap: 14px;
+        align-items: start;
+        border-bottom: 1px solid var(--line);
+        padding: 14px;
+        background: linear-gradient(90deg, #ffffff 0%, #f4fbfc 100%);
+      }
+
+      .logo {
+        display: grid;
+        place-items: center;
+        width: 58px;
+        height: 58px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #edf2f5;
+        color: var(--muted);
+        object-fit: contain;
+        font-weight: 850;
+      }
+
+      h2 {
+        margin: 0;
+        color: var(--navy);
+        font-size: 18px;
+        letter-spacing: 0;
+      }
+
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px 12px;
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .description {
+        margin: 10px 14px 0;
+        color: #28323b;
+        font-size: 14px;
+        line-height: 1.45;
+      }
+
+      .description.empty {
+        color: var(--muted);
+        font-style: italic;
+      }
+
+      .people {
+        display: grid;
+        margin: 12px 0 0 72px;
+        border-left: 4px solid var(--teal);
+        background: #f9fbfd;
+      }
+
+      .person {
+        display: grid;
+        grid-template-columns: minmax(160px, 1fr) minmax(220px, 1.2fr) minmax(160px, 0.8fr);
+        gap: 10px;
+        border-top: 1px solid #edf1f4;
+        padding: 10px 14px;
+        font-size: 13px;
+      }
+
+      .person:first-child { border-top: 0; }
+
+      .name {
+        color: var(--navy);
+        font-weight: 800;
+      }
+
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-top: 7px;
+      }
+
+      .pill {
+        border-radius: 999px;
+        background: #e7f6f7;
+        color: var(--teal);
+        padding: 3px 7px;
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .pill.warn {
+        background: var(--danger-bg);
+        color: var(--danger);
+      }
+
+      .empty-list {
+        padding: 18px;
+        color: var(--muted);
+      }
+
+      @media (max-width: 760px) {
+        .bar,
+        .toolbar,
+        .org-head,
+        .person {
+          grid-template-columns: 1fr;
+        }
+
+        .top-actions,
+        .stats {
+          justify-content: stretch;
+        }
+
+        .people {
+          margin-left: 14px;
+        }
+
+        button {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="bar">
+        <div>
+          <h1>Review partners</h1>
+          <div class="meta" id="timestamp"></div>
+        </div>
+        <div class="top-actions">
+          <a href="/">Lista principal</a>
+          <button id="refresh" type="button">Atualizar dados</button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <div class="toolbar">
+        <input id="search" type="search" placeholder="Filtrar por empresa, descrição, cidade, país, pessoa, email ou telefone" />
+        <div class="stats" id="stats"></div>
+      </div>
+      <div class="note" id="note"></div>
+      <section class="orgs" id="orgs"></section>
+    </main>
+
+    <script>
+      let dataset = null;
+      let visible = [];
+
+      const el = {
+        timestamp: document.getElementById("timestamp"),
+        refresh: document.getElementById("refresh"),
+        search: document.getElementById("search"),
+        stats: document.getElementById("stats"),
+        note: document.getElementById("note"),
+        orgs: document.getElementById("orgs"),
+      };
+
+      function text(value) {
+        return String(value || "");
+      }
+
+      function escapeHtml(value) {
+        return text(value).replace(/[&<>"']/g, (char) => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#039;",
+        })[char]);
+      }
+
+      function initials(name) {
+        return text(name).trim().slice(0, 2).toUpperCase() || "?";
+      }
+
+      function setNote(message = "") {
+        el.note.textContent = message;
+        el.note.classList.toggle("visible", Boolean(message));
+      }
+
+      async function fetchJson(path, options = {}) {
+        const response = await fetch(path, {
+          cache: "no-store",
+          headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+          ...options,
+        });
+        const body = await response.json();
+        if (!response.ok || body.error) throw new Error(body.error || "Erro ao chamar o servidor local.");
+        return body;
+      }
+
+      function searchable(org) {
+        return [
+          org.name,
+          org.description,
+          org.city,
+          org.country,
+          org.url,
+          ...(org.emails || []),
+          ...(org.tags || []),
+          ...(org.dataTags || []),
+          ...(org.contacts || []).flatMap((person) => [
+            person.name,
+            ...(person.emails || []),
+            ...(person.phones || []),
+            ...(person.jobTitles || []),
+            ...(person.tags || []),
+            ...(person.dataTags || []),
+          ]),
+        ].join(" ").toLocaleLowerCase("pt-PT");
+      }
+
+      function pill(value, warn = false) {
+        return value ? `<span class="pill ${warn ? "warn" : ""}">${escapeHtml(value)}</span>` : "";
+      }
+
+      function renderPerson(person) {
+        return `
+          <div class="person">
+            <div>
+              <div class="name">${escapeHtml(person.name || "(sem nome)")}</div>
+              <div class="meta">${escapeHtml((person.jobTitles || []).join(", "))}</div>
+            </div>
+            <div>${(person.emails || []).map((email) => `<a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a>`).join("<br>")}</div>
+            <div>${(person.phones || []).map((phone) => `<a href="tel:${escapeHtml(phone)}">${escapeHtml(phone)}</a>`).join("<br>")}</div>
+          </div>
+        `;
+      }
+
+      function renderOrg(org) {
+        const logo = org.logo
+          ? `<img class="logo" src="${escapeHtml(org.logo)}" alt="" loading="lazy" />`
+          : `<div class="logo">${escapeHtml(initials(org.name))}</div>`;
+        const location = [org.city, org.country].filter(Boolean).join(", ");
+        const orgEmails = (org.emails || []).map((email) => `<a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a>`).join(", ");
+        const tagLine = [
+          ...(org.tags || []).map((item) => pill(item)),
+          ...(org.dataTags || []).map((item) => pill(item)),
+          ...(org.qualityFlags || []).map((item) => pill(item, true)),
+        ].join("");
+        return `
+          <article class="org" id="org-${escapeHtml(org.id)}">
+            <div class="org-head">
+              ${logo}
+              <div>
+                <h2>${escapeHtml(org.name)}</h2>
+                <div class="meta">
+                  ${location ? `<span>${escapeHtml(location)}</span>` : ""}
+                  ${org.url ? `<a href="${escapeHtml(org.url)}" target="_blank" rel="noreferrer">${escapeHtml(org.url)}</a>` : ""}
+                  ${orgEmails ? `<span>${orgEmails}</span>` : ""}
+                  <span>${(org.contacts || []).length} pessoas</span>
+                </div>
+                ${tagLine ? `<div class="tags">${tagLine}</div>` : ""}
+              </div>
+              <button class="danger" type="button" data-delete-org="${escapeHtml(org.id)}">Apagar</button>
+            </div>
+            <p class="description ${org.description ? "" : "empty"}">${escapeHtml(org.description || "Sem descrição registada.")}</p>
+            <div class="people">
+              ${(org.contacts || []).length ? org.contacts.map(renderPerson).join("") : `<div class="empty-list">Sem pessoas associadas.</div>`}
+            </div>
+          </article>
+        `;
+      }
+
+      function render() {
+        const query = el.search.value.trim().toLocaleLowerCase("pt-PT");
+        visible = (dataset?.organisations || []).filter((org) => !query || searchable(org).includes(query));
+        const people = visible.reduce((sum, org) => sum + (org.contacts || []).length, 0);
+        el.stats.innerHTML = [
+          `<span class="stat">${visible.length} / ${dataset?.organisationCount || 0} empresas</span>`,
+          `<span class="stat">${people} pessoas visíveis</span>`,
+        ].join("");
+        el.orgs.innerHTML = visible.length
+          ? visible.map(renderOrg).join("")
+          : `<div class="empty-list">Nenhuma empresa corresponde ao filtro.</div>`;
+        el.orgs.querySelectorAll("[data-delete-org]").forEach((button) => {
+          button.addEventListener("click", () => deleteOrg(button.dataset.deleteOrg));
+        });
+      }
+
+      async function load(refresh = false) {
+        el.refresh.disabled = true;
+        el.refresh.textContent = refresh ? "A atualizar..." : "A carregar...";
+        try {
+          setNote("");
+          dataset = await fetchJson(refresh ? "/api/refresh" : "/api/data");
+          el.timestamp.textContent = dataset.refreshedAt
+            ? `Atualizado: ${new Date(dataset.refreshedAt).toLocaleString("pt-PT")}`
+            : "";
+          render();
+        } catch (error) {
+          setNote(`Não foi possível carregar: ${error.message || "servidor local indisponível"}.`);
+        } finally {
+          el.refresh.disabled = false;
+          el.refresh.textContent = "Atualizar dados";
+        }
+      }
+
+      async function deleteOrg(id) {
+        const org = (dataset?.organisations || []).find((item) => String(item.id) === String(id));
+        if (!org) return;
+        const peopleCount = (org.contacts || []).reduce((sum, person) => sum + (person.ids?.length || 1), 0);
+        const typed = prompt(`Esta ação apaga no CRM a empresa "${org.name}" e ${peopleCount} pessoa(s) associada(s). Para confirmar, escreve exatamente o nome da empresa:`);
+        if (typed !== org.name) {
+          if (typed !== null) setNote("Eliminação cancelada: o nome escrito não corresponde.");
+          return;
+        }
+        const button = document.querySelector(`[data-delete-org="${CSS.escape(String(id))}"]`);
+        if (button) {
+          button.disabled = true;
+          button.textContent = "A apagar...";
+        }
+        try {
+          const body = await fetchJson("/api/review-delete-organisation", {
+            method: "POST",
+            body: JSON.stringify({ id, confirmName: typed }),
+          });
+          dataset = body;
+          const info = body.reviewDeletion || {};
+          setNote(`Apagado: ${info.organisation?.name || org.name}; pessoas removidas: ${info.deletedPeople?.length || 0}.`);
+          render();
+        } catch (error) {
+          setNote(`Não foi possível apagar "${org.name}": ${error.message || "erro desconhecido"}.`);
+          if (button) {
+            button.disabled = false;
+            button.textContent = "Apagar";
+          }
+        }
+      }
+
+      el.refresh.addEventListener("click", () => load(true));
+      el.search.addEventListener("input", render);
+      load(false);
+    </script>
+  </body>
+</html>

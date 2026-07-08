@@ -105,7 +105,8 @@ async function capsuleFetch(path, token, options = {}) {
     throw new Error(`Capsule ${response.status}: ${body || response.statusText}`);
   }
 
-  const data = await response.json();
+  const text = await response.text();
+  const data = text ? JSON.parse(text) : {};
   return { data, link: response.headers.get("link") || "" };
 }
 
@@ -1037,6 +1038,7 @@ function transform(parties) {
     return {
       id: String(org.id),
       name: cleanText(org.name) || "(sem nome)",
+      description: cleanText(org.about),
       city: primaryCity(org),
       country: primaryCountry(org),
       logo: isDefaultOrganisationLogo(org.pictureURL) ? "" : cleanText(org.pictureURL),
@@ -1206,6 +1208,13 @@ async function readCache() {
   return JSON.parse(await readFile(cachePath, "utf8"));
 }
 
+async function readRequestJson(req) {
+  const chunks = [];
+  for await (const chunk of req) chunks.push(chunk);
+  const raw = Buffer.concat(chunks).toString("utf8").trim();
+  return raw ? JSON.parse(raw) : {};
+}
+
 function sendJson(res, status, body) {
   res.writeHead(status, {
     "content-type": "application/json; charset=utf-8",
@@ -1217,6 +1226,59 @@ function sendJson(res, status, body) {
 
 function sendError(res, error) {
   sendJson(res, 500, { error: error.message || String(error) });
+}
+
+async function deleteOrganisationWithPeople({ id, confirmName }) {
+  const orgId = cleanText(id);
+  if (!orgId) throw new Error("Falta o id da empresa.");
+
+  const cache = await readCache();
+  const org = (cache.organisations || []).find((item) => String(item.id) === orgId);
+  if (!org) throw new Error(`Empresa ${orgId} não encontrada no cache local.`);
+  if (cleanText(confirmName) !== org.name) {
+    throw new Error("Nome de confirmação não corresponde à empresa.");
+  }
+
+  const token = await getToken();
+  const personIds = unique((org.contacts || []).flatMap((contact) => contact.ids || []).map(String));
+  const deletedPeople = [];
+  const errors = [];
+
+  for (const personId of personIds) {
+    try {
+      await capsuleFetch(`/parties/${personId}`, token, { method: "DELETE" });
+      deletedPeople.push(personId);
+    } catch (error) {
+      errors.push({ type: "person", id: personId, error: error.message || String(error) });
+    }
+  }
+
+  let deletedOrganisation = false;
+  if (!errors.length) {
+    try {
+      await capsuleFetch(`/parties/${orgId}`, token, { method: "DELETE" });
+      deletedOrganisation = true;
+    } catch (error) {
+      errors.push({ type: "organisation", id: orgId, error: error.message || String(error) });
+    }
+  }
+
+  const report = {
+    generatedAt: new Date().toISOString(),
+    organisation: { id: org.id, name: org.name },
+    requestedPeople: personIds.length,
+    deletedPeople,
+    deletedOrganisation,
+    errors,
+  };
+  await writeFile(join(root, "review-delete-report.json"), JSON.stringify(report, null, 2), "utf8");
+
+  const data = deletedOrganisation && !errors.length ? await refreshData() : await readCache();
+  data.reviewDeletion = {
+    ...report,
+    outputFile: "review-delete-report.json",
+  };
+  return data;
 }
 
 function prepareMissingLogos() {
@@ -1431,7 +1493,15 @@ const server = http.createServer(async (req, res) => {
       }));
       return;
     }
-    const requested = url.pathname === "/" ? "/index.html" : url.pathname;
+    if (url.pathname === "/api/review-delete-organisation") {
+      if (req.method !== "POST") {
+        sendJson(res, 405, { error: "Método não permitido." });
+        return;
+      }
+      sendJson(res, 200, await deleteOrganisationWithPeople(await readRequestJson(req)));
+      return;
+    }
+    const requested = url.pathname === "/" ? "/index.html" : (url.pathname === "/review" ? "/review.html" : url.pathname);
     const path = join(root, requested.replace(/^\/+/, ""));
     const body = await readFile(path);
     res.writeHead(200, {

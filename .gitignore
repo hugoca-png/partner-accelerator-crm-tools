@@ -8,7 +8,8 @@ node_modules/
 *.out
 *.err
 server-cmd.*
-server.*
+server.out.log
+server.err.log
 
 # CRM/customer data exports and generated reports
 *.json

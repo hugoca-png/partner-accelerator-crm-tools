@@ -632,6 +632,14 @@
         font-size: 14px;
       }
 
+      .org-description {
+        margin: 0;
+        padding: 14px 18px 0 88px;
+        color: #28323b;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
       .tagline {
         display: flex;
         flex-wrap: wrap;
@@ -847,6 +855,10 @@
           margin-left: 14px;
         }
 
+        .org-description {
+          padding-left: 18px;
+        }
+
         .org-head {
           grid-template-columns: 52px 1fr;
           gap: 12px;
@@ -1001,6 +1013,7 @@
               <div class="view-toggle" aria-label="Modo de visualização">
                 <button id="companiesOnly" class="active" type="button">Empresas</button>
                 <button id="companiesPeople" type="button">Empresas + pessoas</button>
+                <button id="companiesDescriptionPeople" type="button">Empresas + descrição + pessoas</button>
                 <button id="logosOnly" type="button">Logotipos A4</button>
               </div>
             </fieldset>
@@ -1061,6 +1074,7 @@
         personSearch: document.getElementById("personSearch"),
         companiesOnly: document.getElementById("companiesOnly"),
         companiesPeople: document.getElementById("companiesPeople"),
+        companiesDescriptionPeople: document.getElementById("companiesDescriptionPeople"),
         logosOnly: document.getElementById("logosOnly"),
       };
 
@@ -1411,6 +1425,7 @@
       }
 
       function renderOrg(org) {
+        const showDescription = viewMode === "descriptionPeople";
         const tags = org.tags.filter(visibleTag).map((tag) => renderTag(tag)).join("");
         const dataTags = org.dataTags.map((tag) => renderTag(tag, "data")).join("");
         const errorTags = (org.qualityFlags || [])
@@ -1431,6 +1446,9 @@
         const people = org.contacts.length
           ? org.contacts.map(renderPerson).join("")
           : `<div class="empty">Sem pessoas referenciadas nesta organização.</div>`;
+        const description = showDescription && org.description
+          ? `<p class="org-description">${escapeHtml(org.description)}</p>`
+          : "";
         return `
           <article class="org" id="org-${escapeHtml(org.id)}" data-letter="${escapeHtml(firstLetter(org.name))}" data-tags="${escapeHtml(org.tags.join("|"))}" data-data-tags="${escapeHtml(org.dataTags.join("|"))}">
             <div class="org-head">
@@ -1446,6 +1464,7 @@
                 ${warning}
               </div>
             </div>
+            ${description}
             <div class="people">${people}</div>
           </article>
         `;
@@ -1532,6 +1551,7 @@
         const unlinkedPeople = filteredUnlinkedPeople();
         el.companiesOnly.classList.toggle("active", viewMode === "companies" && !showingUnlinkedPeople);
         el.companiesPeople.classList.toggle("active", viewMode === "people" || showingUnlinkedPeople);
+        el.companiesDescriptionPeople.classList.toggle("active", viewMode === "descriptionPeople" && !showingUnlinkedPeople);
         el.logosOnly.classList.toggle("active", viewMode === "logos" && !showingUnlinkedPeople);
         el.filterUnlinkedPeople.textContent = `Pessoas sem empresa (${quality.unlinkedPeople?.length || 0})`;
         el.filterOrgsWithoutPeople.textContent = `Empresas sem pessoas (${quality.organisationsWithoutContacts?.length || 0})`;
@@ -1561,7 +1581,7 @@
         el.headerTimestamp.textContent = dataset.refreshedAt
           ? `Atualizado: ${new Date(dataset.refreshedAt).toLocaleString("pt-PT")}`
           : "";
-        const showPeople = viewMode === "people";
+        const showPeople = viewMode === "people" || viewMode === "descriptionPeople";
         const logoMode = viewMode === "logos";
         el.az.hidden = logoMode || showingUnlinkedPeople;
         el.orgs.classList.toggle("compact", !showPeople && !logoMode && !showingUnlinkedPeople);
@@ -1574,7 +1594,7 @@
             : `<div class="empty">Nenhuma pessoa sem empresa corresponde aos filtros.</div>`;
           return;
         }
-        el.personSearch.placeholder = showPeople ? "Pesquisar pessoas, email ou telemóvel" : "Ativa Empresas + pessoas para pesquisar contactos";
+        el.personSearch.placeholder = showPeople ? "Pesquisar pessoas, email ou telemóvel" : "Ativa um modo com pessoas para pesquisar contactos";
         el.orgs.innerHTML = visible.length
           ? (logoMode ? renderLogoPages(visible) : visible.map(renderOrg).join(""))
           : `<div class="empty">Nenhuma organização corresponde aos filtros.</div>`;
@@ -1590,8 +1610,9 @@
         if (qualityFilter === "unlinkedPeople") qualityFilter = "";
         el.companiesOnly.classList.toggle("active", viewMode === "companies");
         el.companiesPeople.classList.toggle("active", viewMode === "people");
+        el.companiesDescriptionPeople.classList.toggle("active", viewMode === "descriptionPeople");
         el.logosOnly.classList.toggle("active", viewMode === "logos");
-        if (viewMode !== "people") el.personSearch.value = "";
+        if (viewMode !== "people" && viewMode !== "descriptionPeople") el.personSearch.value = "";
         render();
       }
 
@@ -2129,6 +2150,7 @@
       el.personSearch.addEventListener("input", render);
       el.companiesOnly.addEventListener("click", () => setView("companies"));
       el.companiesPeople.addEventListener("click", () => setView("people"));
+      el.companiesDescriptionPeople.addEventListener("click", () => setView("descriptionPeople"));
       el.logosOnly.addEventListener("click", () => setView("logos"));
       checkLocalServer();
       setInterval(checkLocalServer, 15000);

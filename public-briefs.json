@@ -1,0 +1,56 @@
+{
+  "289463474": {
+    "reviewedAt": "2026-10-27",
+    "summary": "A NAVRA é uma consultora portuguesa de dados, automação e inteligência artificial. Combina engenharia e modelação de dados, business intelligence, redesenho de processos e aplicações de IA para apoiar decisões e reduzir trabalho repetitivo. O seu posicionamento é de projetos à medida, executados em proximidade com as equipas dos clientes, com ênfase em adoção e resultados mensuráveis.",
+    "capabilities": [
+      "Dados e BI: engenharia de dados, modelos analíticos e dashboards em Power BI; a oferta inclui stacks como Microsoft Fabric, Databricks e Snowflake.",
+      "Automação e IA: redesenho de workflows e soluções personalizadas para melhorar processos e eficiência.",
+      "Experiência da equipa em projetos nos setores da saúde, retalho, hotelaria, educação e serviços financeiros."
+    ],
+    "recent": [
+      {
+        "date": "Outubro 2026",
+        "text": "Gonçalo Sousa anunciou a dedicação a tempo inteiro à NAVRA após liderar projetos digitais na COBUS; apresentou José Calheiros como cofundador.",
+        "sourceUrl": "https://pt.linkedin.com/in/goncalomsousa/pt"
+      },
+      {
+        "date": "Outubro 2026",
+        "text": "José Calheiros também comunicou a passagem da AUTODOC para o projeto NAVRA, com foco em dados, BI e IA.",
+        "sourceUrl": "https://pt.linkedin.com/in/josecalheiros"
+      }
+    ],
+    "assessment": "Potencial de colaboração em projetos de dados e automação no ecossistema Microsoft, pela referência explícita a Fabric e Power BI. A presença de logótipos de tecnologia no site não comprova uma parceria comercial formal.",
+    "microsoftPathways": [
+      { "name": "Data & AI (Azure)", "rationale": "Engenharia de dados, analytics, dashboards Power BI e Microsoft Fabric são centrais na oferta divulgada." },
+      { "name": "Digital & App Innovation (Azure)", "rationale": "A automação de processos e as soluções de IA à medida criam afinidade, embora não haja evidência pública de entregas em Azure." }
+    ],
+    "microsoftFit": "Ambos os percursos integram o badge Solutions Partner for Cloud & AI Platforms. Trata-se de um alinhamento indicativo baseado na oferta publicada; a elegibilidade e uma designação obtida dependem de confirmação no Microsoft Partner Center.",
+    "unknowns": "Sem confirmação pública fiável de NIF, faturação, dimensão da equipa, clientes nomeados ou resultados financeiros. A morada detalhada também não foi localizada; o CRM indica apenas Porto, Portugal.",
+    "keyPeople": [
+      { "name": "Gonçalo Sousa", "role": "Co-fundador", "sourceUrl": "https://pt.linkedin.com/in/goncalomsousa/pt" },
+      { "name": "José Calheiros", "role": "Co-fundador", "sourceUrl": "https://pt.linkedin.com/in/goncalomsousa/pt" }
+    ],
+    "sources": [
+      {
+        "label": "NAVRA · website",
+        "url": "https://www.navra-tech.com/"
+      },
+      {
+        "label": "NAVRA · sobre",
+        "url": "https://www.navra-tech.com/about"
+      },
+      {
+        "label": "NAVRA · Insights",
+        "url": "https://www.navra-tech.com/insights"
+      },
+      {
+        "label": "Gonçalo Sousa · LinkedIn",
+        "url": "https://pt.linkedin.com/in/goncalomsousa/pt"
+      },
+      {
+        "label": "José Calheiros · LinkedIn",
+        "url": "https://pt.linkedin.com/in/josecalheiros"
+      }
+    ]
+  }
+}

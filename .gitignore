@@ -2,6 +2,9 @@
 capsule-cache.json
 capsule-cache.js
 node_modules/
+.artifact-node/
+tmp/
+output/
 
 # Local runtime/logs
 *.log
@@ -23,3 +26,5 @@ prepared-logos/
 !package.json
 !package-lock.json
 !tsconfig.json
+!public-addresses.json
+!public-briefs.json

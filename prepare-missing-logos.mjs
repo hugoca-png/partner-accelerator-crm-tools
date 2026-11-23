@@ -3,6 +3,12 @@ import { join } from "node:path";
 
 const outputDir = "prepared-logos";
 const cache = JSON.parse(await readFile("capsule-cache.json", "utf8"));
+const addToCrmLogoSources = JSON.parse(await readFile("addtocrm-logo-sources.json", "utf8").catch(() => "{}"));
+const generatedReportFiles = new Set([
+  "index.html",
+  "logos-report.json",
+  "crm-upload-report.json",
+]);
 
 const manualOverrides = new Map([
   ["devlop", {
@@ -46,6 +52,19 @@ function extFromContentType(type, url) {
   if (/jpeg|jpg/i.test(type) || /\.jpe?g(\?|$)/i.test(url)) return ".jpg";
   if (/gif/i.test(type) || /\.gif(\?|$)/i.test(url)) return ".gif";
   return "";
+}
+
+function imageTypeFromBytes(bytes) {
+  if (bytes.length >= 8 && bytes.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) {
+    return { ext: ".png", contentType: "image/png" };
+  }
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
+    return { ext: ".jpg", contentType: "image/jpeg" };
+  }
+  if (bytes.length >= 6 && ["GIF87a", "GIF89a"].includes(bytes.subarray(0, 6).toString("ascii"))) {
+    return { ext: ".gif", contentType: "image/gif" };
+  }
+  return null;
 }
 
 function isDefaultOrganisationLogo(value) {
@@ -151,7 +170,7 @@ function isIconCandidate(candidate) {
 
 function isCredibleLogoCandidate(company, candidate) {
   if (isLikelyWrongLogo(company, candidate)) return false;
-  if (candidate.source === "manual official asset") return true;
+  if (["manual official asset", "Add to CRM company profile"].includes(candidate.source)) return true;
 
   const text = `${candidate.url} ${candidate.source}`.toLocaleLowerCase("pt-PT");
   const hasCompanySignal = candidateHasCompanySignal(company, candidate);
@@ -179,6 +198,33 @@ async function fetchText(url) {
   const contentType = response.headers.get("content-type") || "";
   if (!contentType.includes("text/html")) throw new Error(`Conteudo nao HTML: ${contentType || "desconhecido"}`);
   return { html: await response.text(), finalUrl: response.url };
+}
+
+function websiteCandidates(company) {
+  const urls = [];
+  const add = (value) => {
+    const url = clean(value);
+    if (url && !urls.includes(url)) urls.push(url);
+  };
+  add(company.url);
+  for (const domain of company.domains || []) {
+    add(`https://${domain}`);
+    add(`https://www.${domain}`);
+    add(`http://${domain}`);
+  }
+  return urls;
+}
+
+async function fetchCompanyWebsite(company) {
+  const errors = [];
+  for (const url of websiteCandidates(company)) {
+    try {
+      return await fetchText(url);
+    } catch (error) {
+      errors.push(`${url}: ${error.message || String(error)}`);
+    }
+  }
+  throw new Error(errors.length ? errors.join(" | ") : "Sem website ou dominio no CRM.");
 }
 
 function candidatesFromHtml(html, pageUrl, company) {
@@ -239,11 +285,15 @@ async function downloadCandidate(company, candidate) {
     signal: AbortSignal.timeout(12000),
   });
   if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
-  const contentType = response.headers.get("content-type") || "";
-  const ext = extFromContentType(contentType, response.url || candidate.url);
-  if (!ext) throw new Error(`Formato nao aceite: ${contentType || candidate.url}`);
+  let contentType = response.headers.get("content-type") || "";
   const bytes = Buffer.from(await response.arrayBuffer());
   if (!bytes.length) throw new Error("Ficheiro vazio.");
+  const detected = imageTypeFromBytes(bytes);
+  const ext = extFromContentType(contentType, response.url || candidate.url) || detected?.ext || "";
+  if (!ext) throw new Error(`Formato nao aceite: ${contentType || candidate.url}`);
+  if (!/^image\/(gif|jpe?g|png)/i.test(contentType) && detected?.contentType) {
+    contentType = detected.contentType;
+  }
   const fileName = `${slug(company.name)}${ext}`;
   const path = join(outputDir, fileName);
   await writeFile(path, bytes);
@@ -270,25 +320,35 @@ function missingLogoCompanies() {
 }
 
 await mkdir(outputDir, { recursive: true });
-for (const fileName of await readdir(outputDir)) {
-  if (/\.(gif|jpe?g|png)$/i.test(fileName)) {
+
+async function resetPreparedLogos() {
+  const removed = [];
+  for (const fileName of await readdir(outputDir)) {
+    const generatedImage = /\.(gif|jpe?g|png)$/i.test(fileName);
+    if (!generatedImage && !generatedReportFiles.has(fileName)) continue;
     await unlink(join(outputDir, fileName));
+    removed.push(fileName);
   }
+  return removed;
 }
 
+const removedFiles = await resetPreparedLogos();
+
 const companies = missingLogoCompanies();
-const results = [];
-for (const company of companies) {
+async function prepareCompany(company) {
   const result = { ...company, candidates: [], selected: null, error: "" };
   try {
-    if (!company.url) {
-      result.error = "Sem website no CRM; precisa de selecao manual.";
-      results.push(result);
-      continue;
+    const addToCrmLogo = (company.domains || []).map((domain) => addToCrmLogoSources[domain]).find(Boolean);
+    if (addToCrmLogo) {
+      result.candidates.push({ url: addToCrmLogo, source: "Add to CRM company profile", score: 110 });
     }
-    const { html, finalUrl } = await fetchText(company.url);
-    result.finalWebsiteUrl = finalUrl;
-    result.candidates = candidatesFromHtml(html, finalUrl, company);
+    try {
+      const { html, finalUrl } = await fetchCompanyWebsite(company);
+      result.finalWebsiteUrl = finalUrl;
+      result.candidates.push(...candidatesFromHtml(html, finalUrl, company));
+    } catch (error) {
+      result.websiteError = error.message || String(error);
+    }
     if (company.manualLogo) {
       result.candidates.unshift({ url: company.manualLogo, source: "manual official asset", score: 100 });
     }
@@ -307,14 +367,32 @@ for (const company of companies) {
     }
 
     if (!result.selected) {
-      result.error = "Nao foi encontrado candidato obvio em formato aceite: gif, jpg ou png.";
+      result.error = result.websiteError || "Nao foi encontrado candidato obvio em formato aceite: gif, jpg ou png.";
     }
     if (company.manualNote) result.note = company.manualNote;
   } catch (error) {
     result.error = error.message || String(error);
   }
-  results.push(result);
+  return result;
 }
+
+async function mapWithConcurrency(items, concurrency, mapper) {
+  const output = new Array(items.length);
+  let nextIndex = 0;
+  async function worker() {
+    while (nextIndex < items.length) {
+      const index = nextIndex;
+      nextIndex += 1;
+      output[index] = await mapper(items[index]);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, worker));
+  return output;
+}
+
+const results = await mapWithConcurrency(companies, 8, prepareCompany);
+const preparedFromAddToCrm = results.filter((item) => item.selected?.source === "Add to CRM company profile").length;
+const preparedFromOfficialWebsite = results.filter((item) => item.selected && item.selected.source !== "Add to CRM company profile").length;
 
 function escapeHtml(value) {
   return clean(value).replace(/[&<>"']/g, (char) => ({
@@ -347,7 +425,8 @@ const html = `<!doctype html>
 </head>
 <body>
   <h1>Logos preparados para upload manual no Capsule</h1>
-  <p class="meta">Gerado em ${escapeHtml(new Date(generatedAt).toLocaleString("pt-PT"))}. Fonte: empresas sem logo em capsule-cache.json. Criterio: website oficial; apenas formatos aceites: GIF, JPG ou PNG. SVG e WebP ficam pendentes.</p>
+  <p class="meta">Gerado em ${escapeHtml(new Date(generatedAt).toLocaleString("pt-PT"))}. Fluxo: estado atual do Capsule CRM, referências empresariais do Add to CRM e website oficial. Apenas formatos aceites: GIF, JPG ou PNG. SVG e WebP ficam pendentes.</p>
+  <p class="meta"><strong>${preparedFromAddToCrm}</strong> preparados via Add to CRM; <strong>${preparedFromOfficialWebsite}</strong> via website oficial; <strong>${results.filter((item) => !item.selected).length}</strong> pendentes.</p>
   <table>
     <thead><tr><th>Empresa</th><th>Pre-visualizacao</th><th>Ficheiro</th><th>Fonte</th><th>Notas</th></tr></thead>
     <tbody>
@@ -369,6 +448,9 @@ await writeFile(join(outputDir, "index.html"), html, "utf8");
 await writeFile(join(outputDir, "logos-report.json"), JSON.stringify({
   generatedAt,
   sourceRefreshedAt: cache.refreshedAt || "",
+  removedPreviousFiles: removedFiles.length,
+  preparedFromAddToCrm,
+  preparedFromOfficialWebsite,
   totalMissingLogos: companies.length,
   prepared: results.filter((item) => item.selected).length,
   pending: results.filter((item) => !item.selected).length,
@@ -379,6 +461,9 @@ console.log(JSON.stringify({
   prepared: results.filter((item) => item.selected).length,
   pending: results.filter((item) => !item.selected).length,
   totalMissingLogos: companies.length,
+  removedPreviousFiles: removedFiles.length,
+  preparedFromAddToCrm,
+  preparedFromOfficialWebsite,
   folder: outputDir,
   report: join(outputDir, "index.html"),
 }, null, 2));

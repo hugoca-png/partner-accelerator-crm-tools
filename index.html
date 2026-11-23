@@ -54,7 +54,7 @@
         grid-template-columns: 1fr auto;
         gap: 18px;
         align-items: center;
-        width: min(1280px, calc(100vw - 32px));
+        width: min(1500px, calc(100vw - 32px));
         margin: 0 auto;
         padding: 16px 0;
       }
@@ -340,38 +340,137 @@
 
       .shell {
         display: grid;
-        grid-template-columns: 300px 1fr;
-        gap: 18px;
-        width: min(1280px, calc(100vw - 32px));
+        grid-template-columns: minmax(0, 1fr);
+        width: min(1500px, calc(100vw - 32px));
         margin: 0 auto;
       }
 
-      .controls {
+      .navigation-bar {
         position: sticky;
-        top: 112px;
-        align-self: start;
-        max-height: calc(100vh - 116px);
+        top: var(--header-height, 112px);
+        z-index: 9;
+        border-bottom: 1px solid var(--line);
+        background: var(--paper);
+      }
+
+      .section-nav {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        min-height: 48px;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+
+      .navigation-top { display: flex; align-items: center; gap: 8px; }
+
+      .navigation-top .section-nav { flex: 1; min-width: 0; }
+
+      .nav-export {
+        flex: 0 0 auto;
+        min-height: 32px;
+        margin-right: 4px;
+        border-radius: 6px;
+        color: var(--teal);
+        font-size: 12px;
+      }
+
+      .nav-export-mobile { display: none; }
+
+      .section-nav button {
+        flex: 0 0 auto;
+        min-height: 40px;
+        border: 0;
+        border-bottom: 3px solid transparent;
+        border-radius: 4px 4px 0 0;
+        background: transparent;
+        color: #465264;
+        padding: 8px 12px;
+        font-size: 13px;
+        font-weight: 750;
+      }
+
+      .section-nav button.active {
+        border-bottom-color: var(--teal);
+        background: var(--teal-soft);
+        color: var(--navy);
+      }
+
+      .section-nav button[data-section]::after {
+        content: "+";
+        margin-left: 8px;
+        color: var(--teal);
+        font-size: 16px;
+        line-height: 1;
+      }
+
+      .section-nav button[data-section][aria-expanded="true"]::after {
+        content: "−";
+      }
+
+      .section-panel[hidden],
+      .list-main[hidden],
+      .admin-main[hidden] { display: none; }
+
+      .controls {
+        position: relative;
+        width: 100%;
+        max-height: min(50vh, 420px);
         overflow-y: auto;
-        padding: 12px 4px 72px 0;
+        border-top: 1px solid var(--line);
+        background: var(--panel);
+        padding: 14px 16px;
         scrollbar-width: thin;
       }
+
+      .controls.mobile-collapsed { display: none; }
+
+      .controls fieldset {
+        border: 0;
+        border-bottom: 1px solid var(--line);
+        border-radius: 0;
+        padding: 8px 0 12px;
+        box-shadow: none;
+      }
+
+      .controls .fold { border-radius: 4px; }
 
       .control-stack {
         display: grid;
         gap: 12px;
       }
 
+      .controls .filters {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px 12px;
+      }
+
+      .controls .filters > * { min-width: 0; }
+
+      .controls .filters > fieldset { grid-column: 1 / -1; }
+
+      .controls .toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+
+      @media (max-width: 1120px) {
+        .controls .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
+
+      @media (max-width: 700px) {
+        .controls .filters { grid-template-columns: minmax(0, 1fr); }
+        .controls .toolbar { grid-template-columns: minmax(0, 1fr); }
+      }
+
       .az {
         position: sticky;
-        top: 112px;
+        top: calc(var(--header-height, 112px) + var(--nav-height, 48px));
         z-index: 7;
         display: flex;
-        gap: 4px;
+        gap: 2px;
         overflow-x: auto;
         overflow-y: hidden;
         width: 100%;
-        margin-bottom: 12px;
-        padding: 8px 0;
+        margin-bottom: 8px;
+        padding: 5px 0;
         background: var(--paper);
         scrollbar-width: thin;
       }
@@ -380,8 +479,8 @@
         display: grid;
         place-items: center;
         flex: 0 0 auto;
-        width: 34px;
-        height: 30px;
+        width: 29px;
+        height: 28px;
         border: 1px solid var(--line);
         border-radius: 6px;
         background: #ffffff;
@@ -397,8 +496,121 @@
         color: var(--accent);
       }
 
+      .az[hidden] { display: none; }
+
       main {
-        padding: 18px 0 48px;
+        min-width: 0;
+        padding: 12px 0 48px;
+      }
+
+      .fold {
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #ffffff;
+        padding: 0;
+      }
+
+      .fold summary {
+        cursor: pointer;
+        padding: 10px 12px;
+        color: var(--navy);
+        font-size: 13px;
+        font-weight: 750;
+      }
+
+      .fold[open] summary { border-bottom: 1px solid var(--line); }
+
+      .fold > :not(summary) { margin: 10px 12px 12px; }
+
+      .quality-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 10px;
+      }
+
+      .quality-actions button.active {
+        border-color: var(--teal);
+        background: var(--teal-soft);
+        color: var(--teal);
+      }
+
+      .admin-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr));
+        gap: 12px;
+        align-items: start;
+      }
+
+      .view-heading {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+
+      .view-heading h2 { font-size: 18px; }
+
+      .result-count { color: var(--muted); font-size: 13px; font-weight: 700; }
+
+      .list-toolbar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(240px, 380px);
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+
+      .list-toolbar .view-heading { margin-bottom: 0; }
+
+      .quick-search { min-width: 0; }
+
+      .active-filters {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 5px;
+        margin-bottom: 8px;
+      }
+
+      .active-filters:empty { display: none; }
+
+      .active-filter {
+        border: 1px solid #b9dfe2;
+        border-radius: 5px;
+        background: var(--teal-soft);
+        color: var(--navy);
+        padding: 4px 7px;
+        font-size: 11px;
+        font-weight: 750;
+      }
+
+      .clear-filters {
+        border: 0;
+        background: transparent;
+        color: var(--teal);
+        padding: 4px 6px;
+        font-size: 12px;
+        font-weight: 750;
+      }
+
+      .admin-main {
+        display: grid;
+        align-content: start;
+        gap: 12px;
+      }
+
+      .admin-main > a {
+        display: inline-flex;
+        align-items: center;
+        width: fit-content;
+        min-height: 38px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #fff;
+        padding: 0 12px;
+        font-weight: 750;
       }
 
       .filters {
@@ -503,6 +715,7 @@
 
       .orgs {
         display: grid;
+        grid-template-columns: minmax(0, 1fr);
         gap: 12px;
       }
 
@@ -584,6 +797,7 @@
       }
 
       .org {
+        min-width: 0;
         border: 1px solid var(--line);
         border-radius: 8px;
         background: var(--panel);
@@ -600,6 +814,8 @@
         border-bottom: 1px solid var(--line);
         background: linear-gradient(90deg, #ffffff 0%, #f4fbfc 100%);
       }
+
+      .org-head > div { min-width: 0; }
 
       .logo {
         width: 72px;
@@ -626,8 +842,8 @@
       }
 
       .org-title {
-        display: flex;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
         gap: 8px;
         align-items: center;
       }
@@ -648,6 +864,35 @@
         font-size: 14px;
       }
 
+      .org-url, .org-email, .person > div { overflow-wrap: anywhere; }
+
+      .org-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        justify-self: end;
+        width: 32px;
+        height: 32px;
+        border: 1px solid #b9dddf;
+        border-radius: 6px;
+        background: #e7f6f7;
+        color: var(--teal);
+        padding: 0;
+        text-decoration: none;
+      }
+
+      .org-action:hover {
+        border-color: var(--teal);
+        background: var(--teal);
+        color: #ffffff;
+      }
+
+      .org-action svg {
+        width: 18px;
+        height: 18px;
+        stroke: currentColor;
+      }
+
       .org-description {
         margin: 8px 0 0;
         color: #28323b;
@@ -659,6 +904,7 @@
         display: flex;
         flex-wrap: wrap;
         gap: 6px;
+        min-width: 0;
       }
 
       .pill {
@@ -730,12 +976,89 @@
         background: #f9fbfd;
       }
 
+      .orgs:not(.compact) .people {
+        margin-left: 28px;
+        border-left: 3px solid var(--teal);
+        padding-left: 10px;
+      }
+
+      .people-tab {
+        justify-self: start;
+        margin-left: -10px;
+        border: 1px solid #c8e5e8;
+        border-left: 0;
+        border-radius: 0 0 5px 0;
+        background: var(--teal-soft);
+        color: var(--navy);
+        padding: 4px 9px;
+        font-size: 11px;
+        font-weight: 800;
+      }
+
       .compact .people {
         display: none;
       }
 
       .compact .org-head {
         border-bottom: 0;
+      }
+
+      .orgs.compact .org {
+        box-shadow: 0 5px 16px rgba(30, 39, 97, 0.06);
+      }
+
+      .orgs.compact.two-up .org-head {
+        grid-template-columns: 46px minmax(0, 1fr);
+        align-items: start;
+        gap: 10px;
+        padding: 11px;
+        background: #ffffff;
+      }
+
+      .orgs.compact.two-up .logo {
+        width: 46px;
+        height: 46px;
+        object-fit: contain;
+      }
+
+      .orgs.compact.two-up .org-title {
+        grid-template-columns: minmax(0, 1fr) 30px;
+        grid-template-areas: "name action" "tags tags";
+        gap: 3px 6px;
+        align-items: start;
+      }
+
+      .orgs.compact.two-up .org-title h2 {
+        grid-area: name;
+        font-size: 16px;
+        overflow-wrap: anywhere;
+      }
+
+      .orgs.compact.two-up .org-title .tagline { grid-area: tags; gap: 4px; }
+
+      .orgs.compact.two-up .org-action {
+        grid-area: action;
+        width: 30px;
+        height: 30px;
+      }
+
+      .orgs.compact.two-up .pill { padding: 2px 5px; font-size: 10px; }
+
+      .orgs.compact .org-meta,
+      .orgs.compact .org-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2px 9px;
+        margin-top: 4px;
+      }
+
+      .orgs.compact .org-meta > *,
+      .orgs.compact .org-links > * {
+        min-width: 0;
+        margin-top: 0;
+        font-size: 11px;
+        line-height: 1.3;
+        overflow-wrap: anywhere;
       }
 
       .person {
@@ -797,15 +1120,126 @@
         color: var(--muted);
       }
 
+
+      @media (min-width: 1050px) {
+        .orgs.two-up {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          align-items: start;
+        }
+
+        .orgs.two-up .org-head {
+          grid-template-columns: 52px minmax(0, 1fr);
+          gap: 10px;
+          padding: 11px 12px;
+        }
+
+        .orgs.two-up .logo {
+          width: 52px;
+          height: 52px;
+        }
+
+        .orgs.two-up .org-title {
+          grid-template-columns: minmax(0, 1fr) auto;
+          grid-template-areas: "name action" "tags tags";
+        }
+
+        .orgs.two-up .org-title h2 {
+          grid-area: name;
+          overflow-wrap: anywhere;
+          font-size: 17px;
+        }
+
+        .orgs.two-up .org-title .tagline { grid-area: tags; }
+        .orgs.two-up .org-action { grid-area: action; }
+        .orgs.two-up .city,
+        .orgs.two-up .org-url,
+        .orgs.two-up .org-email { margin-top: 2px; font-size: 12px; }
+        .orgs.two-up .pill { padding: 3px 6px; font-size: 11px; }
+        .orgs.two-up .org-description { margin-top: 5px; font-size: 13px; line-height: 1.4; }
+        .orgs.two-up:not(.compact) .people { margin-left: 28px; }
+
+        .orgs.two-up .person {
+          grid-template-columns: 36px minmax(0, 1fr);
+          gap: 4px 10px;
+          padding: 10px;
+        }
+
+        .orgs.two-up .avatar { width: 36px; height: 36px; }
+
+        .orgs.two-up .person > :nth-child(n + 3) {
+          grid-column: 2;
+          min-width: 0;
+          overflow-wrap: anywhere;
+        }
+      }
+
+      @media (min-width: 800px) {
+        .orgs.compact.two-up {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          align-items: stretch;
+        }
+      }
+
+      @media (min-width: 1250px) {
+        .orgs.compact.two-up {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+      }
       @media (max-width: 760px) {
+        header { position: relative; }
+
+        .bar { gap: 8px; padding: 9px 0; }
+
+        .brand {
+          display: grid;
+          grid-template-columns: 102px minmax(0, 1fr);
+          gap: 8px;
+        }
+
+        .brand > div { display: contents; }
+
+        .brand-logo { width: 102px; }
+
+        .brand h1 { grid-column: 2; font-size: 19px; line-height: 1.15; }
+
+        .brand .stats { grid-column: 1 / -1; margin-top: 0; gap: 5px; font-size: 11px; }
+
+        .stat { min-width: 0; padding: 4px 6px; }
+
+        .header-timestamp,
+        .server-status { padding: 5px 8px; font-size: 11px; }
+
         .shell {
           grid-template-columns: 1fr;
           width: min(100vw - 24px, 1280px);
         }
 
+        .navigation-bar {
+          top: 0;
+        }
+
+        .section-nav button {
+          min-height: 36px;
+          padding: 6px 7px;
+          font-size: 12px;
+        }
+
+        .nav-export { padding: 0 8px; margin-right: 0; }
+
+        .nav-export-desktop { display: none; }
+
+        .nav-export-mobile { display: inline; }
+
+        .controls {
+          max-height: min(50vh, 420px);
+          padding: 10px 12px;
+        }
+
+        main { padding-top: 10px; }
+
         .az {
           position: sticky;
-          top: 368px;
+          top: var(--nav-height, 48px);
           z-index: 6;
           display: flex;
           overflow-x: auto;
@@ -817,18 +1251,6 @@
           background: var(--paper);
         }
 
-        .controls {
-          top: 96px;
-          z-index: 8;
-          max-height: calc(100vh - 112px);
-          overflow-y: auto;
-          padding: 10px;
-          border: 1px solid var(--line);
-          border-radius: 8px;
-          background: rgba(245, 247, 251, 0.96);
-          backdrop-filter: blur(10px);
-        }
-
         .az a {
           flex: 0 0 auto;
           width: 30px;
@@ -838,11 +1260,10 @@
         }
 
         .bar,
-        .brand,
         .filters,
         .toolbar,
         .person {
-          grid-template-columns: 1fr;
+          grid-template-columns: minmax(0, 1fr);
         }
 
         .header-side {
@@ -858,17 +1279,25 @@
           justify-content: center;
         }
 
-        .brand-logo {
-          width: 190px;
-        }
-
         .toolbar {
           gap: 8px;
         }
 
+        .list-toolbar { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+
         .people {
           margin-left: 14px;
         }
+
+        .person {
+          grid-template-columns: 36px minmax(0, 1fr);
+          gap: 4px 8px;
+          padding: 9px 8px;
+        }
+
+        .person .avatar { width: 36px; height: 36px; }
+
+        .person > :nth-child(n + 3) { grid-column: 2; min-width: 0; }
 
         .org-head {
           grid-template-columns: 52px 1fr;
@@ -889,7 +1318,15 @@
           font-size: 18px;
         }
 
-        button {
+        .org-title {
+          grid-template-columns: minmax(0, 1fr) auto;
+        }
+
+        .org-title .tagline {
+          grid-column: 1 / -1;
+        }
+
+        .controls button:not(.chip-group-title) {
           width: 100%;
         }
 
@@ -905,7 +1342,8 @@
         }
 
         header,
-        .controls,
+        .navigation-bar,
+        .quick-search,
         .az {
           display: none !important;
         }
@@ -979,7 +1417,6 @@
         </div>
         <div class="header-side">
           <div class="header-timestamp" id="headerTimestamp"></div>
-          <a class="header-link" href="/review">Review</a>
           <div class="server-health" aria-live="polite">
             <span class="server-status" id="serverStatus">Servidor local: a verificar</span>
             <button class="start-server-button" id="startLocalServer" type="button" hidden>Iniciar servidor</button>
@@ -989,65 +1426,92 @@
     </header>
 
     <div class="shell">
-      <aside class="controls" aria-label="Opções">
+      <div class="navigation-bar">
+        <div class="navigation-top">
+          <nav class="section-nav" aria-label="Áreas da aplicação">
+            <button type="button" data-section="partners" class="active" aria-current="page" aria-expanded="false" aria-controls="controls">Parceiros</button>
+            <button type="button" data-section="quality" aria-expanded="false" aria-controls="controls">Qualidade</button>
+            <button type="button" data-section="admin" aria-expanded="false" aria-controls="controls">Administração</button>
+          </nav>
+          <button id="exportExcel" class="nav-export" type="button" aria-label="Exportar seleção atual para Excel" title="Exportar seleção atual para Excel"><span class="nav-export-desktop">Exportar Excel</span><span class="nav-export-mobile">Excel</span></button>
+        </div>
+        <aside class="controls mobile-collapsed" id="controls" aria-label="Filtros">
         <div class="control-stack">
-          <section class="filters" aria-label="Menu">
-            <fieldset>
-              <legend>Dados</legend>
-              <div class="actions">
-                <button id="refresh" type="button">Atualizar</button>
-                <button id="exportExcel" class="export-button" type="button">Exportar Excel</button>
-                <button id="prepareMissingLogos" class="export-button" type="button">Preparar logos em falta</button>
-                <button id="uploadMissingLogos" class="export-button" type="button">Adicionar logos ao CRM</button>
-              </div>
-            </fieldset>
-
-            <fieldset>
-              <legend>Qualidade</legend>
-              <div class="validation-actions" aria-label="Qualidade dos dados">
-                <button id="normalizePhones" type="button">Corrigir telefones PT</button>
-                <button id="correctNameAccents" type="button">Corrigir acentuação</button>
-                <button id="filterUnlinkedPeople" type="button">Pessoas sem empresa</button>
-                <button id="filterOrgsWithoutPeople" type="button">Empresas sem pessoas</button>
-              </div>
-            </fieldset>
-
-            <fieldset>
-              <legend>Pesquisar</legend>
+          <section class="filters section-panel" data-panel="partners" aria-label="Filtros de parceiros">
+            <details class="fold">
+              <summary>Pesquisa avançada</summary>
               <div class="toolbar">
                 <input class="search" id="companySearch" type="search" placeholder="Pesquisar empresas ou cidade" />
                 <input class="search" id="personSearch" type="search" placeholder="Pesquisar pessoas, email ou telemóvel" />
               </div>
-            </fieldset>
+            </details>
 
-            <fieldset>
-              <legend>Visualização</legend>
+            <details class="fold">
+              <summary>Visualização</summary>
               <div class="view-toggle" aria-label="Modo de visualização">
                 <button id="companiesOnly" class="active" type="button">Empresas</button>
                 <button id="companiesPeople" type="button">Empresas + pessoas</button>
                 <button id="companiesDescriptionPeople" type="button">Empresas + descrição + pessoas</button>
                 <button id="logosOnly" type="button">Logotipos A4</button>
               </div>
-            </fieldset>
+            </details>
 
-            <fieldset>
-              <legend>Regiões</legend>
+            <details class="fold">
+              <summary>Regiões</summary>
               <div class="chips" id="regionFilters"></div>
-            </fieldset>
-            <fieldset>
-              <legend>Tags</legend>
+            </details>
+            <details class="fold">
+              <summary>Tags</summary>
               <div class="chips" id="tagFilters"></div>
-            </fieldset>
-            <fieldset>
-              <legend>Data-tags</legend>
+            </details>
+            <details class="fold">
+              <summary>Data-tags</summary>
               <div class="chips" id="dataTagFilters"></div>
-            </fieldset>
+            </details>
+          </section>
+          <section class="section-panel quality-actions" data-panel="quality" aria-label="Qualidade" hidden>
+            <button id="filterUnlinkedPeople" type="button">Pessoas sem empresa</button>
+            <button id="filterOrgsWithoutPeople" type="button">Empresas sem pessoas</button>
+          </section>
+          <section class="section-panel admin-actions" data-panel="admin" aria-label="Ações de administração" hidden>
+            <details class="fold" open>
+              <summary>Dados e exportação</summary>
+              <div class="actions">
+                <button id="refresh" type="button">Atualizar</button>
+              </div>
+            </details>
+            <details class="fold">
+              <summary>Qualidade no CRM</summary>
+              <div class="validation-actions">
+                <button id="normalizePhones" type="button">Corrigir telefones PT</button>
+                <button id="correctNameAccents" type="button">Corrigir acentuação</button>
+              </div>
+            </details>
+            <details class="fold">
+              <summary>Logotipos</summary>
+              <div class="actions">
+                <button id="prepareMissingLogos" class="export-button" type="button">Preparar logos em falta</button>
+                <button id="uploadMissingLogos" class="export-button" type="button">Adicionar logos ao CRM</button>
+              </div>
+            </details>
           </section>
         </div>
-      </aside>
+        </aside>
+      </div>
       <main>
-        <nav class="az" id="az" aria-label="Índice A-Z"></nav>
-        <section class="orgs" id="orgs"></section>
+        <div class="list-main" id="listMain">
+          <div class="list-toolbar">
+            <div class="view-heading"><h2 id="viewTitle">Parceiros</h2><span class="result-count" id="resultCount"></span></div>
+            <input class="search quick-search" id="globalSearch" type="search" aria-label="Pesquisar empresas e pessoas" placeholder="Pesquisar empresas e pessoas" autocomplete="off" />
+          </div>
+          <div class="active-filters" id="activeFilters" aria-label="Filtros ativos"></div>
+          <nav class="az" id="az" aria-label="Índice A-Z"></nav>
+          <section class="orgs" id="orgs"></section>
+        </div>
+        <div class="admin-main" id="adminMain" hidden>
+          <div class="view-heading"><h2>Administração</h2><span class="result-count" id="adminSummary"></span></div>
+          <a id="reviewLink" href="review.html">Rever e remover empresas e pessoas →</a>
+        </div>
       </main>
     </div>
 
@@ -1055,12 +1519,23 @@
       let dataset = null;
 
       const el = {
+        sectionNav: document.querySelector(".section-nav"),
+        sectionButtons: [...document.querySelectorAll("[data-section]")],
+        sectionPanels: [...document.querySelectorAll("[data-panel]")],
+        controls: document.getElementById("controls"),
+        listMain: document.getElementById("listMain"),
+        adminMain: document.getElementById("adminMain"),
+        adminSummary: document.getElementById("adminSummary"),
+        viewTitle: document.getElementById("viewTitle"),
+        resultCount: document.getElementById("resultCount"),
+        activeFilters: document.getElementById("activeFilters"),
         stats: document.getElementById("stats"),
         headerNote: document.getElementById("headerNote"),
         headerTimestamp: document.getElementById("headerTimestamp"),
         serverStatus: document.getElementById("serverStatus"),
         startLocalServer: document.getElementById("startLocalServer"),
         homeLink: document.querySelector(".home-link"),
+        reviewLink: document.getElementById("reviewLink"),
         refresh: document.getElementById("refresh"),
         exportExcel: document.getElementById("exportExcel"),
         prepareMissingLogos: document.getElementById("prepareMissingLogos"),
@@ -1084,6 +1559,7 @@
         status: document.getElementById("status") || { textContent: "" },
         companySearch: document.getElementById("companySearch"),
         personSearch: document.getElementById("personSearch"),
+        globalSearch: document.getElementById("globalSearch"),
         companiesOnly: document.getElementById("companiesOnly"),
         companiesPeople: document.getElementById("companiesPeople"),
         companiesDescriptionPeople: document.getElementById("companiesDescriptionPeople"),
@@ -1095,6 +1571,7 @@
       });
 
       let viewMode = "companies";
+      let currentSection = "partners";
       let qualityFilter = "";
       const collapsedRegionGroups = new Set();
 
@@ -1138,6 +1615,255 @@
       function renderTag(tag, extraClass = "") {
         const classes = ["pill", extraClass, emailTagClass(tag)].filter(Boolean).join(" ");
         return `<span class="${classes}">${escapeHtml(tag)}</span>`;
+      }
+
+      function openOnePager(event, href) {
+        event.preventDefault();
+        const popup = window.open(href, "_blank", "noopener,noreferrer");
+        if (!popup) {
+          setHeaderNote("O browser bloqueou a nova página do one-pager. Permite pop-ups para este site local e tenta novamente.");
+        }
+        return false;
+      }
+
+      function onePagerPaLogo() {
+        return `<svg class="pa-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 270 72" role="img" aria-label="Partner Accelerator">
+          <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 14 L34 34 L14 54" stroke="#028090" stroke-width="8"/>
+            <path d="M36 14 L56 34 L36 54" stroke="#1E2761" stroke-width="8"/>
+            <path d="M14 62 L56 62" stroke="#D4AF37" stroke-width="6"/>
+          </g>
+          <g font-family="Segoe UI, Helvetica, Arial, sans-serif" fill="#1E2761">
+            <text x="82" y="31" font-size="24" font-weight="700" letter-spacing="1.2">PARTNER</text>
+            <text x="82" y="55" font-size="23" font-weight="300" letter-spacing="2.1">ACCELERATOR</text>
+          </g>
+        </svg>`;
+      }
+
+      function onePagerPills(values, type = "") {
+        return (values || [])
+          .filter(type === "tag" ? visibleTag : Boolean)
+          .map((value) => `<span class="pill ${type === "data" ? "data" : ""}">${escapeHtml(value)}</span>`)
+          .join("");
+      }
+
+      function onePagerContact(person) {
+        const email = person.selectedEmail || person.emails?.[0] || "";
+        const phones = person.phones || [];
+        const role = (person.jobTitles || []).filter(Boolean).join(", ");
+        const photo = realLogo(person.photo)
+          ? `<img class="avatar" src="${escapeHtml(person.photo)}" alt="" />`
+          : `<div class="avatar fallback">${escapeHtml((person.name || "?").slice(0, 2).toUpperCase())}</div>`;
+        const tags = onePagerPills(person.tags || [], "tag") + onePagerPills(person.dataTags || [], "data");
+        return `
+          <article class="contact">
+            ${photo}
+            <div>
+              <h3>${escapeHtml(person.name || "(sem nome)")}</h3>
+              ${role ? `<p class="role">${escapeHtml(role)}</p>` : ""}
+              ${tags ? `<div class="tagline compact-tags">${tags}</div>` : ""}
+              <div class="contact-lines">
+                ${email ? `<a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a>` : ""}
+                ${phones.map((phone) => `<a href="tel:${escapeHtml(phone)}">${escapeHtml(phone)}</a>`).join("")}
+              </div>
+            </div>
+          </article>
+        `;
+      }
+
+      function onePagerAddressLines(address, fallback = {}) {
+        return [
+          address.line1,
+          address.line2,
+          [address.postalCode, address.city].filter(Boolean).join(" "),
+          address.country || (!address.line1 && !address.line2 ? fallback.country : ""),
+        ].map(text).filter(Boolean);
+      }
+
+      function onePagerAddressBlock(org, publicAddress = {}) {
+        const fullName = text(org.formalName || publicAddress.formalName || org.name);
+        const crmLines = onePagerAddressLines(org.address || {}, org);
+        const publicLines = onePagerAddressLines(publicAddress);
+        const normalise = (lines) => lines.join(" ").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+        const different = publicLines.length && normalise(publicLines) !== normalise(crmLines);
+        const sections = [];
+        if (publicLines.length) sections.push({ label: "", lines: publicLines, sourceUrl: publicAddress.sourceUrl });
+        if (crmLines.length && (!publicLines.length || different)) sections.push({ label: publicLines.length ? "Outra morada registada" : "", lines: crmLines });
+        return `<div class="address-block">
+          ${sections.map(({ label, lines, sourceUrl }) => `<div class="address-section">
+            ${label ? `<div class="address-label">${escapeHtml(label)}</div>` : ""}
+            <div>${escapeHtml(fullName)}</div>
+            ${lines.map((line) => `<div>${escapeHtml(line)}</div>`).join("")}
+            ${/^https:\/\//i.test(sourceUrl || "") ? `<a class="address-source" href="${escapeHtml(sourceUrl)}" target="_blank" rel="noopener noreferrer">Fonte da morada</a>` : ""}
+          </div>`).join("")}
+          ${org.nif ? `<div class="address-nif">NIF: ${escapeHtml(org.nif)}</div>` : ""}
+        </div>`;
+      }
+
+      function onePagerHtml(org, publicAddress, publicBriefHtml = "", briefCss = "", microsoftHtml = "", unregisteredHtml = "") {
+        const fullName = text(org.formalName || publicAddress?.formalName || org.name);
+        const address = onePagerAddressBlock(org, publicAddress);
+        const orgEmail = org.genericEmails?.[0] || org.emails?.[0] || "";
+        const orgPhones = org.phones || [];
+        const tags = onePagerPills(org.tags || [], "tag") + onePagerPills(org.dataTags || [], "data");
+        const companyLogo = realLogo(org.logo)
+          ? `<img class="company-logo" src="${escapeHtml(org.logo)}" alt="" />`
+          : `<div class="company-logo fallback">${escapeHtml((org.name || "?").slice(0, 2).toUpperCase())}</div>`;
+        const refreshedAt = dataset.refreshedAt
+          ? new Intl.DateTimeFormat("pt-PT", { dateStyle: "short", timeStyle: "short" }).format(new Date(dataset.refreshedAt))
+          : "";
+        return `<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>${escapeHtml(fullName)} | Partner Accelerator</title>
+  <style>
+    ${briefCss}
+    :root { --navy:#1e2761; --teal:#009ca6; --gold:#f1b434; --ink:#17212b; --muted:#5d6975; --line:#dfe5ee; --soft:#f5f8fb; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:#e9eef4; color:var(--ink); font-family:"Segoe UI", Arial, sans-serif; line-height:1.45; }
+    .toolbar { max-width:210mm; margin:18px auto 10px; display:flex; justify-content:flex-end; gap:8px; padding:0 14px; }
+    .toolbar button { border:1px solid var(--line); border-radius:6px; background:#fff; color:var(--navy); padding:8px 11px; font:inherit; font-weight:700; cursor:pointer; }
+    .sheet { width:210mm; min-height:297mm; margin:0 auto 24px; background:#fff; box-shadow:0 18px 50px rgba(23,33,43,.18); padding:15mm; display:flex; flex-direction:column; gap:18px; }
+    .pa-header { display:flex; align-items:center; justify-content:space-between; border-bottom:4px solid var(--teal); padding-bottom:12px; }
+    .pa-logo { width:170px; height:auto; display:block; }
+    .kicker { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.08em; font-weight:800; text-align:right; }
+    .hero { display:grid; grid-template-columns:140px 1fr; gap:20px; align-items:start; }
+    .logo-panel { display:flex; flex-direction:column; align-items:center; gap:10px; }
+    .company-logo { width:118px; height:118px; object-fit:contain; border:1px solid var(--line); border-radius:8px; padding:10px; background:#fff; }
+    .fallback { display:grid; place-items:center; background:var(--soft); color:var(--navy); font-weight:900; }
+    h1 { margin:0; color:var(--navy); font-size:30px; line-height:1.12; letter-spacing:0; }
+    .facts, .tagline { display:flex; flex-wrap:wrap; gap:7px; margin-top:10px; }
+    .fact { border:1px solid var(--line); border-radius:999px; padding:5px 9px; color:var(--muted); font-size:12px; font-weight:700; text-decoration:none; background:#fff; }
+    .address-block { margin-top:12px; color:var(--muted); font-size:13px; font-weight:700; line-height:1.35; user-select:text; white-space:normal; }
+    .address-section { margin-top:8px; }
+    .address-label { color:var(--navy); font-size:11px; text-transform:uppercase; }
+    .address-source { display:inline-block; margin-top:2px; font-size:10px; font-weight:500; }
+    .address-nif { margin-top:7px; }
+    .commercial-name { margin-top:3px; color:var(--muted); font-size:13px; }
+    .pill { border-radius:999px; background:#e7f6f7; color:var(--teal); padding:4px 8px; font-size:11px; font-weight:800; }
+    .pill.data { background:#fff3cf; color:#7a5600; }
+    .logo-panel .tagline { justify-content:center; margin-top:0; gap:5px; }
+    .description { border-left:5px solid var(--gold); background:#fff9e8; padding:12px 14px; color:#28323b; font-size:14px; }
+    .section-title { display:flex; align-items:center; gap:10px; color:var(--navy); font-size:15px; font-weight:900; text-transform:uppercase; letter-spacing:.06em; margin:0; }
+    .section-title::after { content:""; height:1px; background:var(--line); flex:1; }
+    .contacts { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .contact { display:grid; grid-template-columns:46px 1fr; gap:10px; border:1px solid var(--line); border-radius:8px; padding:10px; break-inside:avoid; }
+    .avatar { width:46px; height:46px; border-radius:50%; object-fit:cover; border:1px solid var(--line); font-size:14px; }
+    h3 { margin:0; color:var(--navy); font-size:14px; line-height:1.2; }
+    .role { margin:2px 0 0; color:var(--muted); font-size:11px; }
+    .compact-tags { margin-top:6px; gap:4px; }
+    .contact-lines { display:flex; flex-direction:column; gap:1px; margin-top:5px; font-size:11px; }
+    a { color:var(--teal); }
+    .footer { margin-top:auto; border-top:1px solid var(--line); padding-top:8px; color:var(--muted); font-size:10px; display:flex; justify-content:space-between; gap:12px; }
+    @page { size:A4; margin:14mm; }
+    @media print { body{background:#fff;} .toolbar{display:none;} .sheet{display:block; width:auto; min-height:0; margin:0; box-shadow:none; padding:0;} .sheet > * + *{margin-top:12px;} .hero,.contact,.section-title,.footer{break-inside:avoid;} .section-title{break-after:avoid;} .footer{margin-top:12px;} a{color:inherit; text-decoration:none;} }
+  </style>
+</head>
+<body>
+  <main class="sheet">
+    <header class="pa-header">${onePagerPaLogo()}<div class="kicker">Partner Accelerator<br />one-pager</div></header>
+    <section class="hero">
+      <div class="logo-panel">
+        ${companyLogo}
+        ${tags ? `<div class="tagline">${tags}</div>` : ""}
+      </div>
+      <div>
+        <h1>${escapeHtml(fullName)}</h1>
+        ${fullName !== org.name ? `<div class="commercial-name">${escapeHtml(org.name)}</div>` : ""}
+        ${address}
+        <div class="facts">
+          ${org.url ? `<a class="fact" href="${escapeHtml(org.url)}">${escapeHtml(org.url.replace(/^https?:\/\//, "").replace(/\/$/, ""))}</a>` : ""}
+          ${orgEmail ? `<a class="fact" href="mailto:${escapeHtml(orgEmail)}">${escapeHtml(orgEmail)}</a>` : ""}
+          ${orgPhones.map((phone) => `<a class="fact" href="tel:${escapeHtml(phone)}">${escapeHtml(phone)}</a>`).join("")}
+        </div>
+      </div>
+    </section>
+    ${publicBriefHtml || (org.description ? `<section class="description">${escapeHtml(org.description)}</section>` : "")}
+    ${microsoftHtml}
+    <section>
+      <h2 class="section-title">Contactos registados</h2>
+      <div class="contacts">${org.contacts?.length ? org.contacts.map(onePagerContact).join("") : `<p>Sem contactos registados nesta empresa.</p>`}</div>
+    </section>
+    ${unregisteredHtml}
+    <footer class="footer"><span>Partner Accelerator partners</span>${refreshedAt ? `<span>Dados do CRM atualizados em ${escapeHtml(refreshedAt)}</span>` : ""}</footer>
+  </main>
+</body>
+</html>`;
+      }
+
+      async function openOnePagerFromCache(event, orgId) {
+        event.preventDefault();
+        const org = (dataset.organisations || []).find((item) => String(item.id) === String(orgId));
+        if (!org) {
+          setHeaderNote("Não foi possível encontrar a empresa para gerar o one-pager.");
+          return false;
+        }
+        const popup = window.open("", "_blank");
+        if (!popup) {
+          setHeaderNote("O browser bloqueou a nova página do one-pager. Permite pop-ups para este site local e tenta novamente.");
+          return false;
+        }
+        popup.document.write(`<!doctype html><meta charset="utf-8"><title>A atualizar one-pager</title><body style="font:16px Segoe UI,Arial,sans-serif;padding:40px;color:#1e2761"><h1>A atualizar ${escapeHtml(org.name)}</h1><p>A consultar o website oficial e a preparar o one-pager...</p></body>`);
+        let refreshFailure = "";
+        try {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 120000);
+          try {
+            const response = await fetch(`/api/one-pager-refresh?id=${encodeURIComponent(orgId)}`, { cache: "no-store", signal: controller.signal });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || `HTTP ${response.status}`);
+            if (!popup.closed) popup.location.replace(`/one-pager?id=${encodeURIComponent(orgId)}&prepared=1`);
+            return false;
+          } finally { clearTimeout(timer); }
+        } catch (error) {
+          setHeaderNote(`O one-pager usa os últimos dados guardados: ${error.message || "pesquisa pública indisponível"}`);
+          refreshFailure = error.message || "pesquisa pública indisponível";
+        }
+        let publicAddress = {};
+        try {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 3000);
+          try {
+            const response = await fetch("./public-addresses.json", { cache: "no-store", signal: controller.signal });
+            if (response.ok) publicAddress = (await response.json())[orgId] || {};
+          } finally {
+            clearTimeout(timer);
+          }
+        } catch {
+          // The CRM snapshot can still produce a one-pager while the local server is offline.
+        }
+        let microsoftHtml = "";
+        let publicBriefHtml = "";
+        let briefCss = "";
+        let unregisteredHtml = "";
+        let researchedBrief = {};
+        try {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 3000);
+          const response = await fetch("./public-briefs.json", { cache: "no-store", signal: controller.signal }).finally(() => clearTimeout(timer));
+          if (response.ok) researchedBrief = (await response.json())[orgId] || {};
+        } catch {
+          // The CRM description remains available without the local server.
+        }
+        try {
+          const module = await import("./one-pager-brief.mjs");
+          const brief = module.briefForOrganisation(org, researchedBrief);
+          microsoftHtml = module.renderMicrosoftFit(brief);
+          publicBriefHtml = module.renderPublicBrief(brief, org.contacts || []);
+          unregisteredHtml = module.renderUnregisteredKeyPeople(brief, org.contacts || []);
+          briefCss = module.publicBriefCss;
+        } catch {
+          // Older offline copies still use the original CRM description.
+        }
+        publicBriefHtml = `<section class="description">Atualização pública indisponível: ${escapeHtml(refreshFailure)}. Abaixo estão os últimos dados guardados.</section>` + publicBriefHtml;
+        if (popup.closed) return false;
+        const page = new Blob([onePagerHtml(org, publicAddress, publicBriefHtml, briefCss, microsoftHtml, unregisteredHtml)], { type: "text/html;charset=utf-8" });
+        const pageUrl = URL.createObjectURL(page);
+        popup.location.href = pageUrl;
+        setTimeout(() => URL.revokeObjectURL(pageUrl), 60000);
+        return false;
       }
 
       function renderQualityLabel(text) {
@@ -1189,6 +1915,8 @@
       function companySearchable(org) {
         return [
           org.name,
+          org.formalName,
+          org.nif,
           org.city,
           org.country,
           org.url,
@@ -1218,6 +1946,7 @@
         const regions = includeRegion ? selected(el.regionFilters) : [];
         const companyQuery = el.companySearch.value.trim().toLocaleLowerCase("pt-PT");
         const personQuery = el.personSearch.value.trim().toLocaleLowerCase("pt-PT");
+        const globalQuery = el.globalSearch.value.trim().toLocaleLowerCase("pt-PT");
         const orgsWithoutPeople = new Set((dataset.dataQuality?.organisationsWithoutContacts || []).map((item) => String(item.id)));
         return dataset.organisations
           .filter((org) =>
@@ -1225,13 +1954,15 @@
             matchesSelected(org.filterDataTags || org.dataTags, dataTags) &&
             matchesSelected([regionForOrg(org)], regions) &&
             (!includeQuality || qualityFilter !== "orgsWithoutPeople" || orgsWithoutPeople.has(String(org.id)) || !org.contacts.length) &&
-            (!companyQuery || companySearchable(org).includes(companyQuery))
+            (!companyQuery || companySearchable(org).includes(companyQuery)) &&
+            (!globalQuery || companySearchable(org).includes(globalQuery) || org.contacts.some((person) => personSearchable(person).includes(globalQuery)))
           )
           .map((org) => ({
             ...org,
-            contacts: personQuery
-              ? org.contacts.filter((person) => personSearchable(person).includes(personQuery))
-              : org.contacts,
+            contacts: org.contacts.filter((person) =>
+              (!personQuery || personSearchable(person).includes(personQuery)) &&
+              (!globalQuery || companySearchable(org).includes(globalQuery) || personSearchable(person).includes(globalQuery)),
+            ),
           }))
           .filter((org) => !personQuery || org.contacts.length);
       }
@@ -1240,6 +1971,7 @@
         const quality = dataset?.dataQuality || {};
         const companyQuery = el.companySearch.value.trim().toLocaleLowerCase("pt-PT");
         const personQuery = el.personSearch.value.trim().toLocaleLowerCase("pt-PT");
+        const globalQuery = el.globalSearch.value.trim().toLocaleLowerCase("pt-PT");
         return (quality.unlinkedPeople || []).filter((person) => {
           const searchable = [
             person.name,
@@ -1247,7 +1979,8 @@
             ...(person.phones || []),
           ].join(" ").toLocaleLowerCase("pt-PT");
           return (!companyQuery || searchable.includes(companyQuery)) &&
-            (!personQuery || searchable.includes(personQuery));
+            (!personQuery || searchable.includes(personQuery)) &&
+            (!globalQuery || searchable.includes(globalQuery));
         });
       }
 
@@ -1469,15 +2202,26 @@
                 <div class="org-title">
                   <h2>${escapeHtml(org.name)}</h2>
                   ${(tags || dataTags || errorTags) ? `<div class="tagline">${tags}${dataTags}${errorTags}</div>` : ""}
+                  <a class="org-action" href="/one-pager?id=${encodeURIComponent(org.id)}" target="_blank" rel="noopener noreferrer" title="One-pager A4" aria-label="Abrir one-pager A4 de ${escapeHtml(org.name)}" onclick="return openOnePagerFromCache(event, '${escapeHtml(org.id)}')">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <path d="M14 2v6h6"></path>
+                      <path d="M8 13h8"></path>
+                      <path d="M8 17h5"></path>
+                    </svg>
+                  </a>
                 </div>
-                ${location ? `<div class="city">${escapeHtml(location)}</div>` : ""}
-                ${url}
-                ${email}
+                ${(org.formalName && org.formalName !== org.name) || org.nif || location ? `<div class="org-meta">
+                  ${org.formalName && org.formalName !== org.name ? `<div class="city">${escapeHtml(org.formalName)}</div>` : ""}
+                  ${org.nif ? `<div class="city">NIF: ${escapeHtml(org.nif)}</div>` : ""}
+                  ${location ? `<div class="city">${escapeHtml(location)}</div>` : ""}
+                </div>` : ""}
+                ${url || email ? `<div class="org-links">${url}${email}</div>` : ""}
                 ${warning}
                 ${description}
               </div>
             </div>
-            <div class="people">${people}</div>
+            <div class="people"><div class="people-tab">Pessoas (${org.contacts.length})</div>${people}</div>
           </article>
         `;
       }
@@ -1545,14 +2289,19 @@
           anchor.addEventListener("click", (event) => {
             event.preventDefault();
             const target = document.querySelector(anchor.getAttribute("href"));
-            scrollToElement(target);
+            setMenuOpen(false);
+            requestAnimationFrame(() => scrollToElement(target));
           });
         });
       }
 
       function scrollToElement(target) {
         if (!target) return;
-        const offset = 128;
+        const header = document.querySelector("header");
+        const headerHeight = getComputedStyle(header).position === "sticky" ? header.getBoundingClientRect().height : 0;
+        const navHeight = document.querySelector(".navigation-bar").getBoundingClientRect().height;
+        const azHeight = el.az.hidden ? 0 : el.az.getBoundingClientRect().height;
+        const offset = headerHeight + navHeight + azHeight + 8;
         const top = target.getBoundingClientRect().top + window.scrollY - offset;
         window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
       }
@@ -1560,6 +2309,7 @@
       function render() {
         const quality = dataset.dataQuality || {};
         const showingUnlinkedPeople = qualityFilter === "unlinkedPeople";
+        const searchActive = Boolean(el.globalSearch.value.trim());
         const unlinkedPeople = filteredUnlinkedPeople();
         el.companiesOnly.classList.toggle("active", viewMode === "companies" && !showingUnlinkedPeople);
         el.companiesPeople.classList.toggle("active", viewMode === "people" || showingUnlinkedPeople);
@@ -1579,6 +2329,12 @@
         el.tagFilters.querySelectorAll("input").forEach((input) => { input.checked = selectedTags.has(input.value); });
         el.dataTagFilters.querySelectorAll("input").forEach((input) => { input.checked = selectedDataTags.has(input.value); });
         const visible = filteredOrgs();
+        el.viewTitle.textContent = currentSection === "quality" ? "Qualidade" : "Parceiros";
+        el.resultCount.textContent = showingUnlinkedPeople
+          ? `${unlinkedPeople.length} pessoas`
+          : `${visible.length} empresas`;
+        el.adminSummary.textContent = `${dataset.organisationCount} organizações · ${dataset.personCount} pessoas`;
+        renderActiveFilters();
         if (showingUnlinkedPeople) {
           el.stats.innerHTML = [
             `<span class="stat"><strong>${unlinkedPeople.length}</strong> / ${quality.unlinkedPeople?.length || 0} pessoas sem empresa</span>`,
@@ -1593,10 +2349,11 @@
         el.headerTimestamp.textContent = dataset.refreshedAt
           ? `Atualizado: ${new Date(dataset.refreshedAt).toLocaleString("pt-PT")}`
           : "";
-        const showPeople = viewMode === "people" || viewMode === "descriptionPeople";
-        const logoMode = viewMode === "logos";
+        const showPeople = viewMode === "people" || viewMode === "descriptionPeople" || searchActive;
+        const logoMode = viewMode === "logos" && !searchActive;
         el.az.hidden = logoMode || showingUnlinkedPeople;
         el.orgs.classList.toggle("compact", !showPeople && !logoMode && !showingUnlinkedPeople);
+        el.orgs.classList.toggle("two-up", !logoMode && !showingUnlinkedPeople);
         el.orgs.classList.toggle("logos-mode", logoMode);
         el.personSearch.disabled = !showPeople && !showingUnlinkedPeople;
         if (showingUnlinkedPeople) {
@@ -1629,6 +2386,7 @@
       }
 
       function toggleQualityFilter(nextFilter) {
+        setSection("quality");
         qualityFilter = qualityFilter === nextFilter ? "" : nextFilter;
         if (qualityFilter === "unlinkedPeople") {
           viewMode = "people";
@@ -1636,7 +2394,56 @@
         render();
       }
 
+      function renderActiveFilters() {
+        const parts = [
+          ...selected(el.regionFilters).map((value) => `Região: ${value}`),
+          ...selected(el.tagFilters).map((value) => `Tag: ${value}`),
+          ...selected(el.dataTagFilters).map((value) => `Data-tag: ${value}`),
+          el.globalSearch.value.trim() ? `Pesquisa: ${el.globalSearch.value.trim()}` : "",
+          el.companySearch.value.trim() ? `Empresa: ${el.companySearch.value.trim()}` : "",
+          el.personSearch.value.trim() ? `Pessoa: ${el.personSearch.value.trim()}` : "",
+          qualityFilter === "unlinkedPeople" ? "Pessoas sem empresa" : "",
+          qualityFilter === "orgsWithoutPeople" ? "Empresas sem pessoas" : "",
+        ].filter(Boolean);
+        el.activeFilters.innerHTML = parts.map((part) => `<span class="active-filter">${escapeHtml(part)}</span>`).join("")
+          + (parts.length ? `<button class="clear-filters" type="button">Limpar tudo</button>` : "");
+        el.activeFilters.querySelector("button")?.addEventListener("click", () => {
+          el.globalSearch.value = "";
+          el.companySearch.value = "";
+          el.personSearch.value = "";
+          for (const container of [el.regionFilters, el.tagFilters, el.dataTagFilters]) {
+            container.querySelectorAll("input:checked").forEach((input) => { input.checked = false; });
+          }
+          qualityFilter = "";
+          render();
+        });
+      }
+
+      function setMenuOpen(open) {
+        el.controls.classList.toggle("mobile-collapsed", !open);
+        el.sectionButtons.forEach((button) => {
+          button.setAttribute("aria-expanded", String(open && button.dataset.section === currentSection));
+        });
+      }
+
+      function setSection(section, menuOpen = true) {
+        currentSection = section;
+        el.sectionButtons.forEach((button) => {
+          const active = button.dataset.section === section;
+          button.classList.toggle("active", active);
+          if (active) button.setAttribute("aria-current", "page");
+          else button.removeAttribute("aria-current");
+        });
+        el.sectionPanels.forEach((panel) => { panel.hidden = panel.dataset.panel !== section; });
+        el.listMain.hidden = section === "admin";
+        el.adminMain.hidden = section !== "admin";
+        setMenuOpen(menuOpen);
+        if (section !== "quality") qualityFilter = "";
+        if (dataset) render();
+      }
+
       function clearAllSelectors() {
+        el.globalSearch.value = "";
         el.companySearch.value = "";
         el.personSearch.value = "";
         el.tagFilters.querySelectorAll("input:checked").forEach((input) => { input.checked = false; });
@@ -1644,12 +2451,16 @@
         el.regionFilters.querySelectorAll("input:checked").forEach((input) => { input.checked = false; });
         qualityFilter = "";
         collapsedRegionGroups.clear();
+        setSection("partners", false);
         setView("companies");
         requestAnimationFrame(() => scrollToElement(el.orgs));
       }
 
       function localApi(path) {
-        return `http://localhost:8787${path}`;
+        const localOrigin = ["localhost", "127.0.0.1"].includes(window.location.hostname)
+          ? window.location.origin
+          : "http://localhost:8788";
+        return new URL(path, localOrigin).href;
       }
 
       const localServerStartUrl = "file:///C:/Users/hugoc/Documents/Codex/2026-05-29/acede-minha-lista-de-empresas-no/start-capsule-export.cmd";
@@ -1733,22 +2544,24 @@
 
       function exportVisibleToExcel() {
         if (!dataset) return;
-        const visible = filteredOrgs();
+        const showingUnlinkedPeople = qualityFilter === "unlinkedPeople";
+        const searchActive = Boolean(el.globalSearch.value.trim());
+        const visible = showingUnlinkedPeople ? [] : filteredOrgs();
         const rows = [];
-        for (const org of visible) {
-          if (!org.contacts.length) {
-            rows.push({
-              org,
-              person: null,
-            });
-          }
-          for (const person of org.contacts) {
-            rows.push({ org, person });
+        if (showingUnlinkedPeople) {
+          for (const person of filteredUnlinkedPeople()) rows.push({ org: null, person });
+        } else {
+          const includePeople = viewMode === "people" || viewMode === "descriptionPeople" || searchActive;
+          for (const org of visible) {
+            if (!includePeople || !org.contacts.length) rows.push({ org, person: null });
+            if (includePeople) for (const person of org.contacts) rows.push({ org, person });
           }
         }
 
         const headers = [
-          "Empresa",
+          "Nome comercial",
+          "Nome formal",
+          "NIF",
           "URL",
           "Cidade",
           "País",
@@ -1762,19 +2575,20 @@
         ];
 
         const htmlRows = rows.map(({ org, person }) => {
-          const locationCountry = org.country || "";
           const values = [
-            org.name,
-            org.url,
-            org.city,
-            locationCountry,
+            org?.name || "",
+            org?.formalName || "",
+            org?.nif || "",
+            org?.url || "",
+            org?.city || "",
+            org?.country || "",
             person?.name || "",
             person?.jobTitles?.join(", ") || "",
             person?.selectedEmail || person?.emails?.[0] || "",
             person?.phones?.join(", ") || "",
             person?.duplicate ? `Sim (${person.ids.length} registos)` : "",
-            org.tags.join(", "),
-            org.dataTags.join(", "),
+            (org?.tags || person?.tags || []).join(", "),
+            (org?.dataTags || person?.dataTags || []).join(", "),
           ];
           return `<tr>${values.map((value) => `<td>${excelCell(value)}</td>`).join("")}</tr>`;
         }).join("");
@@ -1783,8 +2597,11 @@
           ...selected(el.regionFilters).map((value) => `Região: ${value}`),
           ...selected(el.tagFilters).map((value) => `Tag: ${value}`),
           ...selected(el.dataTagFilters).map((value) => `Data-tag: ${value}`),
+          el.globalSearch.value.trim() ? `Pesquisa: ${el.globalSearch.value.trim()}` : "",
           el.companySearch.value.trim() ? `Empresa: ${el.companySearch.value.trim()}` : "",
           el.personSearch.value.trim() ? `Pessoa: ${el.personSearch.value.trim()}` : "",
+          qualityFilter === "unlinkedPeople" ? "Pessoas sem empresa" : "",
+          qualityFilter === "orgsWithoutPeople" ? "Empresas sem pessoas" : "",
         ].filter(Boolean).join(" | ") || "Sem filtros";
 
         const workbook = `
@@ -1804,7 +2621,7 @@
               <h1>Partner Accelerator partners</h1>
               <p class="meta">Exportado: ${excelCell(new Date().toLocaleString("pt-PT"))}</p>
               <p class="meta">Filtros: ${excelCell(filters)}</p>
-              <p class="meta">Organizações visíveis: ${visible.length} | Linhas: ${rows.length}</p>
+              <p class="meta">${showingUnlinkedPeople ? "Pessoas sem empresa" : `Organizações visíveis: ${visible.length}`} | Linhas: ${rows.length}</p>
               <table>
                 <thead><tr>${headers.map((header) => `<th>${excelCell(header)}</th>`).join("")}</tr></thead>
                 <tbody>${htmlRows}</tbody>
@@ -2048,14 +2865,16 @@
         setLoading(true, "A preparar...");
         try {
           setHeaderNote("");
-          const body = await fetchJson("/api/missing-logos", 150000);
+          const body = await fetchJson("/api/missing-logos", 330000);
           const info = body.missingLogos || {};
           const prepared = Number(info.prepared || 0);
           const pending = Number(info.pending || 0);
           const reportUrl = info.reportUrl || "/prepared-logos/index.html";
-          const summary = `Logos preparados: ${prepared}; pendentes: ${pending}. Relatório: ${reportUrl}`;
+          const fromAddToCrm = Number(info.preparedFromAddToCrm || 0);
+          const fromWebsite = Number(info.preparedFromOfficialWebsite || 0);
+          const summary = `Logos preparados: ${prepared} (${fromAddToCrm} via Add to CRM; ${fromWebsite} via website oficial); pendentes: ${pending}. Relatório: ${reportUrl}`;
           setHeaderNote(summary);
-          const reportHref = new URL(reportUrl, "http://localhost:8787").href;
+          const reportHref = localApi(reportUrl);
           if (reportWindow && !reportWindow.closed) {
             reportWindow.location.href = reportHref;
           } else {
@@ -2121,7 +2940,7 @@
           }
           dataset = body;
           render();
-          setServerHealth(true, "porta 8787");
+          setServerHealth(true, `porta ${new URL(localApi("/")).port}`);
           if (body.refreshDiagnostics?.duplicatePartyCount) {
             setHeaderNote(`Refresh corrigido: ${body.refreshDiagnostics.duplicatePartyCount} entradas repetidas da API foram ignoradas antes de gerar a lista.`);
           }
@@ -2141,9 +2960,37 @@
       }
 
       window.refreshPartnerList = () => load(true);
+      el.sectionButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          if (button.dataset.section === currentSection) {
+            setMenuOpen(el.controls.classList.contains("mobile-collapsed"));
+          } else {
+            setSection(button.dataset.section);
+          }
+        });
+      });
+      document.addEventListener("click", (event) => {
+        if (el.sectionNav.contains(event.target) || el.controls.contains(event.target)) return;
+        setMenuOpen(false);
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape" || el.controls.classList.contains("mobile-collapsed")) return;
+        setMenuOpen(false);
+        el.sectionButtons.find((button) => button.dataset.section === currentSection)?.focus();
+      });
+      new ResizeObserver(([entry]) => {
+        document.documentElement.style.setProperty("--header-height", `${Math.ceil(entry.contentRect.height + 4)}px`);
+      }).observe(document.querySelector("header"));
+      new ResizeObserver(([entry]) => {
+        document.documentElement.style.setProperty("--nav-height", `${Math.ceil(entry.contentRect.height)}px`);
+      }).observe(document.querySelector(".navigation-bar"));
       el.homeLink.addEventListener("click", (event) => {
         event.preventDefault();
         clearAllSelectors();
+      });
+      el.reviewLink?.addEventListener("click", (event) => {
+        event.preventDefault();
+        window.location.assign(window.location.protocol === "file:" ? "review.html" : "/review");
       });
       el.startLocalServer.addEventListener("click", startLocalServer);
       el.refresh.addEventListener("click", window.refreshPartnerList);
@@ -2158,6 +3005,7 @@
       el.correctNameAccents.addEventListener("click", correctNameAccents);
       el.filterUnlinkedPeople.addEventListener("click", () => toggleQualityFilter("unlinkedPeople"));
       el.filterOrgsWithoutPeople.addEventListener("click", () => toggleQualityFilter("orgsWithoutPeople"));
+      el.globalSearch.addEventListener("input", () => { if (dataset) render(); });
       el.companySearch.addEventListener("input", render);
       el.personSearch.addEventListener("input", render);
       el.companiesOnly.addEventListener("click", () => setView("companies"));

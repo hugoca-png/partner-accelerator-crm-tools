@@ -1,16 +1,26 @@
 import http from "node:http";
 import { spawn } from "node:child_process";
-import { readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { briefForOrganisation, onePagerFallback, publicBriefCss, renderPublicBrief, renderMicrosoftFit, renderUnregisteredKeyPeople } from "./one-pager-brief.mjs";
+import { researchOrganisation } from "./one-pager-research.mjs";
+import { researchOrganisationWithOpenAI } from "./one-pager-openai.mjs";
+import { renderOnePagerPdf } from "./one-pager-pdf.mjs";
 import { existsSync } from "node:fs";
-import { extname, join } from "node:path";
+import { extname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
-const port = Number(process.env.PORT || 8787);
+const port = Number(process.env.PORT || 8788);
 const cachePath = join(root, "capsule-cache.json");
 const cacheScriptPath = join(root, "capsule-cache.js");
+const publicAddressesPath = join(root, "public-addresses.json");
 const validationReportPath = join(root, "bouncer-email-validation-last.json");
 const logosReportPath = join(root, "prepared-logos", "logos-report.json");
+const publicBriefsPath = join(root, "public-briefs.json");
+const liveBriefsPath = join(root, "public-briefs-live.json");
+const onePagerResearchInFlight = new Map();
+let briefWriteQueue = Promise.resolve();
+const paLogoDataUri = `data:image/svg+xml;base64,${(await readFile(join(root, "assets", "pa-logo.svg"))).toString("base64")}`;
 const emailValidationTags = {
   deliverable: "Email Deliverable",
   risky: "Email Risky",
@@ -26,6 +36,10 @@ const emailValidationRiskTags = [
   emailValidationTags.risky,
   emailValidationTags.undeliverable,
 ];
+const organisationFieldIds = {
+  nif: 957388,
+  formalName: 981556,
+};
 let emailValidationProgress = null;
 
 const freeEmailDomains = new Set([
@@ -413,6 +427,41 @@ function primaryCountry(party) {
   return cleanText(primaryAddress(party).country);
 }
 
+function portugueseStreetLine(value) {
+  const line = cleanText(value).replace(/\s+/g, " ");
+  if (!line) return "";
+  const leadingNumber = line.match(/^(\d+[A-Za-zÀ-ÿ]?(?:\s*[-/]\s*\d+[A-Za-zÀ-ÿ]?)?)\s+(.+)$/u);
+  if (!leadingNumber) return line;
+  const [, number, street] = leadingNumber;
+  if (!street || /\d/.test(street.slice(0, 3))) return line;
+  return `${street.replace(/,\s*$/, "")}, ${number.replace(/\s+/g, "")}`;
+}
+
+function primaryAddressDetails(party) {
+  const address = primaryAddress(party);
+  const line1 = portugueseStreetLine(address.street || address.address || address.line1 || address.street1);
+  const line2 = cleanText(address.line2 || address.street2);
+  const postalCode = cleanText(address.zip || address.postcode || address.postalCode || address.postal_code);
+  const city = cleanText(address.city);
+  const state = cleanText(address.state || address.region || address.county);
+  const country = cleanText(address.country);
+  return {
+    line1,
+    line2,
+    postalCode,
+    city,
+    state,
+    country,
+    formatted: unique([
+      line1,
+      line2,
+      [postalCode, city].filter(Boolean).join(" "),
+      state,
+      country,
+    ]).join(", "),
+  };
+}
+
 function listEmails(party) {
   return (party.emailAddresses || [])
     .map((entry) => cleanText(entry.address))
@@ -544,6 +593,13 @@ function tagInfo(party) {
     tags: unique(normalTags),
     dataTags: unique(dataTags),
   };
+}
+
+function customFieldValue(party, definitionId, namePattern) {
+  const field = (party.fields || []).find((item) =>
+    Number(item.definition?.id) === Number(definitionId) || namePattern.test(item.definition?.name || ""),
+  );
+  return cleanText(field?.value);
 }
 
 function partyTagNames(party) {
@@ -1037,16 +1093,21 @@ function transform(parties) {
     const websites = listWebsites(org);
     const emails = unique(listEmails(org));
     const domains = unique([...websites.map((site) => site.domain), ...organisationDomainAliases(org)]);
+    const address = primaryAddressDetails(org);
     return {
       id: String(org.id),
       name: cleanText(org.name) || "(sem nome)",
+      formalName: customFieldValue(org, organisationFieldIds.formalName, /^Nome formal$/i),
+      nif: customFieldValue(org, organisationFieldIds.nif, /(^|\b)(NIF|NIPC)(\b|$)/i),
       description: cleanText(org.about),
-      city: primaryCity(org),
-      country: primaryCountry(org),
+      city: address.city,
+      country: address.country,
+      address,
       logo: isDefaultOrganisationLogo(org.pictureURL) ? "" : cleanText(org.pictureURL),
       url: websites[0]?.url || "",
       emails,
       genericEmails: genericEmails(emails, domains),
+      phones: listPhones(org),
       tags,
       dataTags,
       domains,
@@ -1222,12 +1283,480 @@ function sendJson(res, status, body) {
     "content-type": "application/json; charset=utf-8",
     "cache-control": "no-store",
     "access-control-allow-origin": "*",
+    "access-control-allow-methods": "GET,POST,OPTIONS",
+    "access-control-allow-headers": "Content-Type,Authorization",
   });
   res.end(JSON.stringify(body));
 }
 
 function sendError(res, error) {
   sendJson(res, 500, { error: error.message || String(error) });
+}
+
+function escapeHtml(value) {
+  return cleanText(value).replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
+  })[char]);
+}
+
+function initials(value) {
+  const parts = cleanText(value).split(/\s+/).filter(Boolean);
+  return (parts.length > 1 ? `${parts[0][0]}${parts[parts.length - 1][0]}` : cleanText(value).slice(0, 2)).toUpperCase();
+}
+
+function displayUrl(value) {
+  return cleanText(value).replace(/^https?:\/\//i, "").replace(/\/$/, "");
+}
+
+function partnerAcceleratorLogoSvg(className = "pa-logo") {
+  return `<img class="${escapeHtml(className)}" src="${paLogoDataUri}" alt="Partner Accelerator" />`;
+}
+
+function onePagerContact(contact) {
+  const email = contact.selectedEmail || contact.emails?.[0] || "";
+  const phones = contact.phones || [];
+  const role = (contact.jobTitles || []).filter(Boolean).join(", ");
+  const photo = cleanText(contact.photo);
+  const tags = [
+    ...(contact.tags || []).filter((tag) => !["Email Deliverable", "Email Risky", "Email Catch-All"].includes(tag)).map((tag) => `<span class="pill">${escapeHtml(tag)}</span>`),
+    ...(contact.dataTags || []).map((tag) => `<span class="pill data">${escapeHtml(tag)}</span>`),
+  ].join("");
+  return `
+    <article class="contact">
+      ${photo ? `<img class="avatar" src="${escapeHtml(photo)}" alt="" />` : `<div class="avatar fallback">${escapeHtml(initials(contact.name || "?"))}</div>`}
+      <div>
+        <h3>${escapeHtml(contact.name || "(sem nome)")}</h3>
+        ${role ? `<p class="role">${escapeHtml(role)}</p>` : ""}
+        ${tags ? `<div class="tagline compact-tags">${tags}</div>` : ""}
+        <div class="contact-lines">
+          ${email ? `<a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a>` : ""}
+          ${phones.map((phone) => `<a href="tel:${escapeHtml(phone)}">${escapeHtml(phone)}</a>`).join("")}
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+function onePagerAddressLines(address, fallback = {}) {
+  return [
+    address.line1,
+    address.line2,
+    [address.postalCode, address.city].filter(Boolean).join(" "),
+    address.country || (!address.line1 && !address.line2 ? fallback.country : ""),
+  ].map(cleanText).filter(Boolean);
+}
+
+function onePagerAddressBlock(org, publicAddress = {}) {
+  const fullName = cleanText(org.formalName || publicAddress.formalName || org.name);
+  const crmLines = onePagerAddressLines(org.address || {}, org);
+  const publicLines = onePagerAddressLines(publicAddress);
+  const normalise = (lines) => lines.join(" ").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const different = publicLines.length && normalise(publicLines) !== normalise(crmLines);
+  const sections = [];
+  if (publicLines.length) sections.push({ label: "", lines: publicLines, sourceUrl: publicAddress.sourceUrl });
+  if (crmLines.length && (!publicLines.length || different)) sections.push({ label: publicLines.length ? "Outra morada registada" : "", lines: crmLines });
+  return `<div class="address-block">
+    ${sections.map(({ label, lines, sourceUrl }) => `<div class="address-section">
+      ${label ? `<div class="address-label">${escapeHtml(label)}</div>` : ""}
+      <div>${escapeHtml(fullName)}</div>
+      ${lines.map((line) => `<div>${escapeHtml(line)}</div>`).join("")}
+      ${/^https:\/\//i.test(sourceUrl || "") ? `<a class="address-source" href="${escapeHtml(sourceUrl)}" target="_blank" rel="noopener noreferrer">Fonte da morada</a>` : ""}
+    </div>`).join("")}
+    ${org.nif ? `<div class="address-nif">NIF: ${escapeHtml(org.nif)}</div>` : ""}
+  </div>`;
+}
+
+function renderOnePager(org, data, publicAddress, publicBrief = {}, refreshError = "", pdfHref = `/one-pager.pdf?id=${encodeURIComponent(org.id)}`) {
+  const fullName = cleanText(org.formalName || publicAddress?.formalName || org.name);
+  const address = onePagerAddressBlock(org, publicAddress);
+  const orgEmail = org.genericEmails?.[0] || org.emails?.[0] || "";
+  const orgPhones = org.phones || [];
+  const tags = [
+    ...(org.tags || []).filter((tag) => !["Email Deliverable", "Email Risky", "Email Catch-All"].includes(tag)).map((tag) => `<span class="pill">${escapeHtml(tag)}</span>`),
+    ...(org.dataTags || []).map((tag) => `<span class="pill data">${escapeHtml(tag)}</span>`),
+  ].join("");
+  const refreshedAt = data.refreshedAt
+    ? new Intl.DateTimeFormat("pt-PT", { dateStyle: "short", timeStyle: "short", timeZone: "Europe/Lisbon" }).format(new Date(data.refreshedAt))
+    : "";
+  const companyLogo = org.logo
+    ? `<img class="company-logo" src="${escapeHtml(org.logo)}" alt="" />`
+    : `<div class="company-logo fallback">${escapeHtml(initials(org.name))}</div>`;
+  const contacts = org.contacts?.length
+    ? org.contacts.map(onePagerContact).join("")
+    : `<p class="empty">Sem contactos registados nesta empresa.</p>`;
+  const title = `${fullName} | Partner Accelerator`;
+  const pdfFilename = `${org.name.replace(/[^a-z0-9-]+/gi, "-")}-one-pager.pdf`;
+  const brief = briefForOrganisation(org, publicBrief);
+
+  return `<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>${escapeHtml(title)}</title>
+  <link rel="icon" href="/assets/pa-logo.svg" type="image/svg+xml" />
+  <style>
+    ${publicBriefCss}
+    :root {
+      --navy: #1e2761;
+      --teal: #009ca6;
+      --gold: #f1b434;
+      --ink: #17212b;
+      --muted: #5d6975;
+      --line: #dfe5ee;
+      --soft: #f5f8fb;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #e9eef4;
+      color: var(--ink);
+      font-family: "Segoe UI", Arial, sans-serif;
+      line-height: 1.45;
+    }
+
+    .toolbar {
+      max-width: 210mm;
+      margin: 18px auto 10px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 0 14px;
+    }
+
+    .toolbar a,
+    .toolbar button {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--navy);
+      padding: 8px 11px;
+      font: inherit;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .sheet {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto 24px;
+      background: #fff;
+      box-shadow: 0 18px 50px rgba(23, 33, 43, 0.18);
+      padding: 15mm;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .pa-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 4px solid var(--teal);
+      padding-bottom: 12px;
+    }
+
+    .pa-logo {
+      width: 170px;
+      height: auto;
+      display: block;
+    }
+
+    .kicker {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 800;
+      text-align: right;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .logo-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .company-logo {
+      width: 118px;
+      height: 118px;
+      object-fit: contain;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: #fff;
+    }
+
+    .fallback {
+      display: grid;
+      place-items: center;
+      background: var(--soft);
+      color: var(--navy);
+      font-weight: 900;
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--navy);
+      font-size: 30px;
+      line-height: 1.12;
+      letter-spacing: 0;
+    }
+
+    .facts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 12px;
+    }
+
+    .fact {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 5px 9px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-decoration: none;
+      background: #fff;
+    }
+
+    .address-block {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.35;
+      user-select: text;
+      white-space: normal;
+    }
+    .address-section { margin-top: 8px; }
+    .address-label { color: var(--navy); font-size: 11px; text-transform: uppercase; }
+    .address-source { display: inline-block; margin-top: 2px; font-size: 10px; font-weight: 500; }
+    .address-nif { margin-top: 7px; }
+    .commercial-name { margin-top: 3px; color: var(--muted); font-size: 13px; }
+
+    .tagline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 10px;
+    }
+
+    .pill {
+      border-radius: 999px;
+      background: #e7f6f7;
+      color: var(--teal);
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .pill.data {
+      background: #fff3cf;
+      color: #7a5600;
+    }
+
+    .logo-panel .tagline {
+      justify-content: center;
+      margin-top: 0;
+      gap: 5px;
+    }
+
+    .description {
+      border-left: 5px solid var(--gold);
+      background: #fff9e8;
+      padding: 12px 14px;
+      color: #28323b;
+      font-size: 14px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--navy);
+      font-size: 15px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin: 0;
+    }
+
+    .section-title::after {
+      content: "";
+      height: 1px;
+      background: var(--line);
+      flex: 1;
+    }
+
+    .contacts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .contact {
+      display: grid;
+      grid-template-columns: 46px 1fr;
+      gap: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      break-inside: avoid;
+    }
+
+    .avatar {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid var(--line);
+      font-size: 14px;
+    }
+
+    h3 {
+      margin: 0;
+      color: var(--navy);
+      font-size: 14px;
+      line-height: 1.2;
+    }
+
+    .role {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .compact-tags {
+      margin-top: 6px;
+      gap: 4px;
+    }
+
+    .contact-lines {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      margin-top: 5px;
+      font-size: 11px;
+    }
+
+    a { color: var(--teal); }
+
+    .empty {
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .footer {
+      margin-top: auto;
+      border-top: 1px solid var(--line);
+      padding-top: 8px;
+      color: var(--muted);
+      font-size: 10px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    @page {
+      size: A4;
+      margin: 9mm;
+    }
+
+    @media print {
+      body { background: #fff; }
+      .toolbar { display: none; }
+      .research-warning { display: none; }
+      .sheet {
+        display: block;
+        width: auto;
+        min-height: 0;
+        margin: 0;
+        box-shadow: none;
+        padding: 0;
+      }
+      .sheet > * + * { margin-top: 6px; }
+      .hero { grid-template-columns: 115px 1fr; gap: 14px; }
+      .company-logo { width: 96px; height: 96px; }
+      .hero, .contact, .section-title, .footer { break-inside: avoid; }
+      .section-title { break-after: avoid; }
+      .footer { display: none; }
+      a { color: inherit; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <a href="/#org-${escapeHtml(org.id)}">Voltar à lista</a>
+    <a href="${escapeHtml(pdfHref)}" download="${escapeHtml(pdfFilename)}">Save as PDF</a>
+  </div>
+  <main class="sheet">
+    <header class="pa-header">
+      ${partnerAcceleratorLogoSvg()}
+      <div class="kicker">Partner Accelerator<br />one-pager</div>
+    </header>
+    ${refreshError ? `<section class="description">Atualização pública indisponível: ${escapeHtml(refreshError)}. Abaixo estão os últimos dados guardados.</section>` : ""}
+    ${brief.researchWarning ? `<section class="description research-warning">${escapeHtml(brief.researchWarning)}</section>` : ""}
+
+    <section class="hero">
+      <div class="logo-panel">
+        ${companyLogo}
+        ${tags ? `<div class="tagline">${tags}</div>` : ""}
+      </div>
+      <div>
+        <h1>${escapeHtml(fullName)}</h1>
+        ${fullName !== org.name ? `<div class="commercial-name">${escapeHtml(org.name)}</div>` : ""}
+        ${address}
+        <div class="facts">
+          ${org.url ? `<a class="fact" href="${escapeHtml(org.url)}">${escapeHtml(displayUrl(org.url))}</a>` : ""}
+          ${orgEmail ? `<a class="fact" href="mailto:${escapeHtml(orgEmail)}">${escapeHtml(orgEmail)}</a>` : ""}
+          ${orgPhones.map((phone) => `<a class="fact" href="tel:${escapeHtml(phone)}">${escapeHtml(phone)}</a>`).join("")}
+        </div>
+      </div>
+    </section>
+
+    ${renderPublicBrief(brief, org.contacts || [])}
+
+    ${renderMicrosoftFit(brief)}
+
+    <section>
+      <h2 class="section-title">Contactos registados</h2>
+      <div class="contacts">${contacts}</div>
+    </section>
+
+    ${renderUnregisteredKeyPeople(brief, org.contacts || [])}
+
+    <footer class="footer">
+      <span>Partner Accelerator partners</span>
+      ${refreshedAt ? `<span>Dados do CRM atualizados em ${escapeHtml(refreshedAt)}</span>` : ""}
+    </footer>
+  </main>
+</body>
+</html>`;
+}
+
+function sendHtml(res, status, body) {
+  res.writeHead(status, {
+    "content-type": "text/html; charset=utf-8",
+    "cache-control": "no-store",
+  });
+  res.end(body);
 }
 
 async function deleteOrganisationWithPeople({ id, confirmDelete }) {
@@ -1337,11 +1866,15 @@ async function deleteReviewPerson({ ids, id, confirmDelete }) {
   return data;
 }
 
-function prepareMissingLogos() {
+async function prepareMissingLogos() {
   const scriptPath = join(root, "prepare-missing-logos.mjs");
   if (!existsSync(scriptPath)) {
     throw new Error("Falta o ficheiro prepare-missing-logos.mjs.");
   }
+
+  // Preserve the previous output when Capsule is unavailable. The child script
+  // only clears prepared-logos after this refresh has completed successfully.
+  await refreshData();
 
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [scriptPath], {
@@ -1354,7 +1887,7 @@ function prepareMissingLogos() {
     const timer = setTimeout(() => {
       child.kill();
       reject(new Error("A preparação dos logos demorou demasiado."));
-    }, 120000);
+    }, 300000);
 
     child.stdout.on("data", (chunk) => {
       stdout += chunk.toString();
@@ -1418,8 +1951,10 @@ async function uploadPreparedLogosToCrm({ dryRun = false } = {}) {
       results.push({ id, name: item.name, status: "skipped", reason: "A empresa ja tem logo no CRM/cache." });
       continue;
     }
-    if (!/^https?:\/\/.+\.(gif|jpe?g|png)(\?|$)/i.test(logoUrl)) {
-      results.push({ id, name: item.name, status: "skipped", reason: "URL do logo nao parece ser GIF/JPG/PNG publico." });
+    const acceptedContentType = /^image\/(gif|jpe?g|png)$/i.test(cleanText(item?.selected?.contentType).split(";")[0]);
+    const acceptedExtension = /^https?:\/\/.+\.(gif|jpe?g|png)(\?|$)/i.test(logoUrl);
+    if (!acceptedContentType && !acceptedExtension) {
+      results.push({ id, name: item.name, status: "skipped", reason: "O logo preparado nao e GIF/JPG/PNG." });
       continue;
     }
 
@@ -1459,11 +1994,93 @@ async function uploadPreparedLogosToCrm({ dryRun = false } = {}) {
   return data;
 }
 
+function briefDateOrder(item) {
+  const value = String(item.date || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const year = value.match(/20\d{2}/)?.[0] || "0000";
+  const months = ["janeiro", "fevereiro", "marco", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+  const month = months.findIndex((name) => value.includes(name));
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : `${year}-${String(month + 1).padStart(2, "0")}-01`;
+}
+
+async function readPublicBriefs(path) {
+  return existsSync(path) ? JSON.parse(await readFile(path, "utf8")) : {};
+}
+
+function pageBrief(live, curated = {}) {
+  if (!live?.summary) return curated;
+  const preferCurated = live.researchStatus !== "openai-web";
+  return {
+    ...curated,
+    ...live,
+    summary: preferCurated && curated.summary ? curated.summary : live.summary,
+    capabilities: preferCurated && curated.capabilities?.length ? curated.capabilities : live.capabilities,
+    microsoftPathways: live.microsoftPathways?.length ? live.microsoftPathways : curated.microsoftPathways || [],
+    microsoftFit: live.microsoftPathways?.length ? live.microsoftFit : curated.microsoftFit || live.microsoftFit || "",
+    keyPeople: live.keyPeople?.length ? live.keyPeople : curated.keyPeople || [],
+  };
+}
+
+async function refreshOnePagerBrief(id) {
+  if (onePagerResearchInFlight.has(id)) return onePagerResearchInFlight.get(id);
+  const task = (async () => {
+    const data = await readCache();
+    const org = (data.organisations || []).find((item) => String(item.id) === id);
+    if (!org) throw new Error("Empresa não encontrada no cache local.");
+    const previous = (await readPublicBriefs(liveBriefsPath))[id];
+    const curated = (await readPublicBriefs(publicBriefsPath))[id];
+    let official;
+    let officialError;
+    try { official = await researchOrganisation(org); }
+    catch (error) { officialError = error; }
+    const apiKey = process.env.OPENAI_API_KEY || await getEnvValue("OPENAI_API_KEY");
+    let fresh;
+    if (apiKey) {
+      try {
+        fresh = await researchOrganisationWithOpenAI(org, {
+          apiKey, officialBrief: official, model: process.env.OPENAI_MODEL || await getEnvValue("OPENAI_MODEL") || "gpt-5.5",
+        });
+      } catch (error) {
+        fresh = onePagerFallback(org, { previous, curated, official, error });
+      }
+    } else {
+      fresh = onePagerFallback(org, {
+        previous, curated, official, error: officialError || new Error("Pesquisa OpenAI não configurada."),
+      });
+    }
+    const brief = curated?.summary ? {
+      ...(fresh.researchStatus === "openai-web" ? curated : fresh),
+      ...(fresh.researchStatus === "openai-web" ? fresh : curated),
+      researchWarning: fresh.researchWarning || "",
+      keyPeople: fresh.keyPeople?.length ? fresh.keyPeople : curated.keyPeople || [],
+      microsoftPathways: fresh.microsoftPathways?.length ? fresh.microsoftPathways : curated.microsoftPathways || [],
+      microsoftFit: fresh.microsoftPathways?.length ? fresh.microsoftFit : curated.microsoftFit || fresh.microsoftFit || "",
+      assessment: curated.assessment || fresh.assessment || "",
+      unknowns: curated.unknowns || fresh.unknowns || "",
+      recent: [...fresh.recent, ...(curated.recent || [])]
+        .filter((item, index, all) => all.findIndex((other) => other.sourceUrl === item.sourceUrl) === index)
+        .sort((a, b) => briefDateOrder(b).localeCompare(briefDateOrder(a)))
+        .slice(0, 5),
+      checkedAt: fresh.reviewedAt,
+      sources: [...fresh.sources, ...(curated.sources || [])]
+        .filter((item, index, all) => all.findIndex((other) => other.url === item.url) === index),
+    } : { ...fresh, checkedAt: fresh.reviewedAt };
+    briefWriteQueue = briefWriteQueue.catch(() => {}).then(async () => {
+      const all = await readPublicBriefs(liveBriefsPath);
+      all[id] = brief;
+      await writeFile(liveBriefsPath, JSON.stringify(all, null, 2), "utf8");
+    });
+    await briefWriteQueue;
+    return brief;
+  })().finally(() => onePagerResearchInFlight.delete(id));
+  onePagerResearchInFlight.set(id, task);
+  return task;
+}
 const mime = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
+  ".pdf": "application/pdf",
 };
 
 if (process.argv.includes("--refresh-once")) {
@@ -1487,10 +2104,39 @@ if (process.argv.includes("--refresh-once")) {
       console.error(error.message || String(error));
       process.exitCode = 1;
     });
+} else if (process.argv[2] === "--preview-one-pager") {
+  const id = cleanText(process.argv[3]);
+  const data = await readCache();
+  const org = (data.organisations || []).find((item) => String(item.id) === id);
+  if (!org) throw new Error(`Empresa ${id} não encontrada no cache local.`);
+  const publicAddresses = existsSync(publicAddressesPath) ? JSON.parse(await readFile(publicAddressesPath, "utf8")) : {};
+  const publicBriefs = await readPublicBriefs(publicBriefsPath);
+  const liveBriefs = await readPublicBriefs(liveBriefsPath);
+  const outputDir = join(root, "output", "one-pagers");
+  await mkdir(outputDir, { recursive: true });
+  const baseName = `${org.name.replace(/[^a-z0-9-]+/gi, "-")}-one-pager`;
+  const outputPath = join(outputDir, `${baseName}.html`);
+  const pdfPath = join(outputDir, `${baseName}.pdf`);
+  const html = renderOnePager(org, data, publicAddresses[id], pageBrief(liveBriefs[id], publicBriefs[id]), "", "__PDF_DATA_URL__");
+  const pdf = await renderOnePagerPdf(html);
+  await writeFile(pdfPath, pdf);
+  await writeFile(outputPath, html.replace("__PDF_DATA_URL__", `data:application/pdf;base64,${Buffer.from(pdf).toString("base64")}`), "utf8");
+  console.log(outputPath);
+  console.log(pdfPath);
 } else {
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url || "/", `http://${req.headers.host}`);
+    if (req.method === "OPTIONS") {
+      res.writeHead(204, {
+        "cache-control": "no-store",
+        "access-control-allow-origin": "*",
+        "access-control-allow-methods": "GET,POST,OPTIONS",
+        "access-control-allow-headers": "Content-Type,Authorization",
+      });
+      res.end();
+      return;
+    }
     if (url.pathname === "/api/health") {
       sendJson(res, 200, {
         ok: true,
@@ -1565,8 +2211,67 @@ const server = http.createServer(async (req, res) => {
       sendJson(res, 200, await deleteReviewPerson(await readRequestJson(req)));
       return;
     }
+    if (url.pathname === "/api/one-pager-refresh") {
+      const id = cleanText(url.searchParams.get("id"));
+      if (!id) {
+        sendJson(res, 400, { error: "Falta o ID da empresa." });
+        return;
+      }
+      sendJson(res, 200, { brief: await refreshOnePagerBrief(id) });
+      return;
+    }
+    if (url.pathname === "/one-pager.pdf") {
+      const id = cleanText(url.searchParams.get("id"));
+      const data = await readCache();
+      const org = (data.organisations || []).find((item) => String(item.id) === id);
+      if (!org) {
+        sendJson(res, 404, { error: "Empresa não encontrada." });
+        return;
+      }
+      const publicAddresses = await readPublicBriefs(publicAddressesPath);
+      const publicBriefs = await readPublicBriefs(publicBriefsPath);
+      const liveBriefs = await readPublicBriefs(liveBriefsPath);
+      const html = renderOnePager(org, data, publicAddresses[id], pageBrief(liveBriefs[id], publicBriefs[id]));
+      const pdf = await renderOnePagerPdf(html);
+      const filename = `${org.name.replace(/[^a-z0-9-]+/gi, "-")}-one-pager.pdf`;
+      res.writeHead(200, {
+        "content-type": "application/pdf",
+        "content-disposition": `attachment; filename="${filename}"`,
+        "content-length": pdf.length,
+        "cache-control": "no-store",
+      });
+      res.end(pdf);
+      return;
+    }
+    if (url.pathname === "/one-pager") {
+      const id = cleanText(url.searchParams.get("id"));
+      const data = await readCache();
+      const org = (data.organisations || []).find((item) => String(item.id) === id);
+      if (!org) {
+        sendHtml(res, 404, "<!doctype html><meta charset=\"utf-8\"><title>Empresa não encontrada</title><body><h1>Empresa não encontrada</h1><p>Confirma o link ou faz refresh dos dados.</p><p><a href=\"/\">Voltar à lista</a></p></body>");
+        return;
+      }
+      let refreshError = "";
+      if (url.searchParams.get("prepared") !== "1") {
+        try { await refreshOnePagerBrief(id); }
+        catch (error) { refreshError = error.message || "pesquisa pública indisponível"; }
+      }
+      const publicAddresses = existsSync(publicAddressesPath)
+        ? JSON.parse(await readFile(publicAddressesPath, "utf8"))
+        : {};
+      const publicBriefs = await readPublicBriefs(publicBriefsPath);
+      const liveBriefs = await readPublicBriefs(liveBriefsPath);
+      sendHtml(res, 200, renderOnePager(org, data, publicAddresses[id], pageBrief(liveBriefs[id], publicBriefs[id]), refreshError));
+      return;
+    }
     const requested = url.pathname === "/" ? "/index.html" : (url.pathname === "/review" ? "/review.html" : url.pathname);
-    const path = join(root, requested.replace(/^\/+/, ""));
+    const decodedRequested = decodeURIComponent(requested);
+    const path = resolve(root, decodedRequested.replace(/^\/+/, ""));
+    if (decodedRequested.split(/[\\/]/).some((part) => part.startsWith("."))
+      || !path.startsWith(resolve(root) + sep)) {
+      sendJson(res, 404, { error: "Não encontrado." });
+      return;
+    }
     const body = await readFile(path);
     res.writeHead(200, {
       "content-type": mime[extname(path)] || "application/octet-stream",

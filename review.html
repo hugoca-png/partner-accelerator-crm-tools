@@ -451,6 +451,7 @@
         }
       }
     </style>
+    <script src="./capsule-cache.js"></script>
   </head>
   <body>
     <header>
@@ -460,7 +461,7 @@
           <div class="meta" id="timestamp"></div>
         </div>
         <div class="top-actions">
-          <a href="/">Lista principal</a>
+          <a id="mainListLink" href="index.html">Lista principal</a>
           <button id="refresh" type="button">Atualizar dados</button>
         </div>
       </div>
@@ -499,6 +500,7 @@
 
       const el = {
         timestamp: document.getElementById("timestamp"),
+        mainListLink: document.getElementById("mainListLink"),
         refresh: document.getElementById("refresh"),
         search: document.getElementById("search"),
         stats: document.getElementById("stats"),
@@ -535,14 +537,26 @@
       }
 
       async function fetchJson(path, options = {}) {
-        const response = await fetch(path, {
-          cache: "no-store",
-          headers: { "Content-Type": "application/json", ...(options.headers || {}) },
-          ...options,
-        });
-        const body = await response.json();
-        if (!response.ok || body.error) throw new Error(body.error || "Erro ao chamar o servidor local.");
-        return body;
+        const localServerUrl = path.startsWith("/") ? `http://localhost:8787${path}` : path;
+        const candidates = window.location.protocol === "file:"
+          ? [localServerUrl]
+          : [path, localServerUrl].filter((value, index, values) => values.indexOf(value) === index);
+        let lastError = null;
+        for (const url of candidates) {
+          try {
+            const response = await fetch(url, {
+              cache: "no-store",
+              headers: { "Content-Type": "text/plain;charset=utf-8", ...(options.headers || {}) },
+              ...options,
+            });
+            const body = await response.json();
+            if (!response.ok || body.error) throw new Error(body.error || "Erro ao chamar o servidor local.");
+            return body;
+          } catch (error) {
+            lastError = error;
+          }
+        }
+        throw lastError || new Error("Erro ao chamar o servidor local.");
       }
 
       function normalizeRegionText(value) {
@@ -824,6 +838,15 @@
             : "";
           render();
         } catch (error) {
+          if (!refresh && window.CAPSULE_DATA) {
+            dataset = window.CAPSULE_DATA;
+            el.timestamp.textContent = dataset.refreshedAt
+              ? `Snapshot local: ${new Date(dataset.refreshedAt).toLocaleString("pt-PT")}`
+              : "Snapshot local";
+            render();
+            setNote("Servidor local indisponivel; a usar o snapshot local. As acoes de apagar/refresh precisam do servidor ativo.");
+            return;
+          }
           setNote(`Não foi possível carregar: ${error.message || "servidor local indisponível"}.`);
         } finally {
           el.refresh.disabled = false;
@@ -938,6 +961,10 @@
         }
       }
 
+      el.mainListLink?.addEventListener("click", (event) => {
+        event.preventDefault();
+        window.location.assign(window.location.protocol === "file:" ? "index.html" : "/");
+      });
       el.refresh.addEventListener("click", () => load(true));
       el.search.addEventListener("input", render);
       load(false);
